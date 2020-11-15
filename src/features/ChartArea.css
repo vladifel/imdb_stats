@@ -1,0 +1,14 @@
+@media (prefers-reduced-motion: no-preference) {
+  #loading_icon {
+    animation: loading_icon_spin infinite 5s linear;
+  }
+}
+
+@keyframes loading_icon_spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
