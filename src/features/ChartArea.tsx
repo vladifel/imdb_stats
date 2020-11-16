@@ -11,7 +11,9 @@ import {
     Tooltip, Legend,
     ResponsiveContainer,
     ScatterChart,
-    Scatter
+    Scatter,
+    LabelList,
+    ZAxis
 } from 'recharts';
 import { mapFromArray } from '../helpers/mapFromArray';
 import { useWindowSize } from '../helpers/useWindowSize';
@@ -21,9 +23,34 @@ import ratingsFile2 from '../assets/ratings2.json';
 import ratingsFile3 from '../assets/ratings3.json';
 import { IChartData, IFilmData, IPersonData } from './LandingPage';
 import './ChartArea.css';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import Divider from '@material-ui/core/Divider';
 
 const styles = () =>
     createStyles({
+        chartArea: {
+            display: 'flex',
+            flexDirection: 'row',
+        },
+        divider: {
+            marginTop: '0.5rem',
+            marginLeft: 0,
+        },
+        infoArea: {
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: "#f3ce13",
+            height: '100%',
+            width: '12.75rem'
+        },
+        infoAreaBottom: {
+
+        },
+        infoAreaTop: {
+
+        },
         loading: {
             height: 'inherit',
             display: 'flex',
@@ -55,7 +82,63 @@ interface IChartAreaProps {
 
 type IChartAreaCombinedProps = IChartAreaProps & WithStyles<typeof styles>;
 
-const buildData = async (resultArray: any, ratings: any, ratings2: any,ratings3: any,props: IChartAreaCombinedProps): Promise<IChartData | undefined> => {
+
+const infoArea = (chartData: IChartData, props: IChartAreaCombinedProps) => {
+    return (
+        <Grid container className={props.classes.infoArea}>
+            <Grid item className={props.classes.infoAreaTop}>
+                <Grid>
+                    <Typography>
+                        Name:
+                </Typography>
+                    <Typography>
+                        {` ${chartData.name}`}
+                    </Typography>
+                </Grid>
+                <Grid>
+                    <Typography>
+                        Number of movies:
+                </Typography>
+                    <Typography>
+                        {` ${chartData.films.length}`}
+                    </Typography>
+                </Grid>
+                <Grid>
+                    <Typography>
+                        Average Rating:
+                </Typography>
+                    <Typography>
+                        {` ${Math.floor(chartData.averageScore * 100) / 100}`}
+                    </Typography>
+                </Grid>
+            </Grid>
+            <Divider variant="inset" className={props.classes.divider} />
+            <Grid item className={props.classes.infoAreaBottom}>
+                <List >
+                    {chartData.films.map(film => {
+                        let votesString = '';
+                        if (film.imdbVotes) {
+                            const votes = film.imdbVotes.toString();
+                            for (let i = 0; i < votes.length; i++) {
+                                (votes.length - i) % 3 === 0 && i !== 0 ? votesString += `,${votes[i]}` : votesString += votes[i];
+                            }
+                        }
+                        return (
+                            <ListItem>
+                                <ListItemText
+                                    primary={`${film.year}: ${film.title}`}
+                                    secondary={`Rating: ${film.rating} (${votesString} votes)`}
+                                />
+                            </ListItem>
+                        )
+                    }
+                    )}
+                </List>
+            </Grid>
+        </Grid>
+    )
+}
+const buildData = async (resultArray: any, ratings: any, ratings2: any, ratings3: any, props: IChartAreaCombinedProps): Promise<IChartData | undefined> => {
     if (!props.selectedName || !props.selectedProf) {
         return;
     }
@@ -65,8 +148,10 @@ const buildData = async (resultArray: any, ratings: any, ratings2: any,ratings3:
         akas: resultArray.base.akas,
         image: resultArray.base.image,
         profession: props.selectedProf,
+        averageScore: 0,
         films: []
     };
+    const scores: number[] = [];
     for (let i = 0; i < resultArray.filmography.length; i++) {
         const film = resultArray.filmography[i];
         if (film.category !== 'self' && film.status === 'released' && film.titleType !== 'video') {
@@ -78,8 +163,9 @@ const buildData = async (resultArray: any, ratings: any, ratings2: any,ratings3:
             ) {
                 const rawId = film.id.split('/');
                 const id = rawId[2];
-                const rating = ratings[id] ? ratings[id] : ratings2[id] ? ratings2[id] :ratings3[id];
+                const rating = ratings[id] ? ratings[id] : ratings2[id] ? ratings2[id] : ratings3[id];
                 if (rating) {
+                    Number(rating.averageRating) && scores.push(Number(rating.averageRating));
                     const filmData = {
                         title: film.title,
                         year: film.year,
@@ -93,10 +179,12 @@ const buildData = async (resultArray: any, ratings: any, ratings2: any,ratings3:
             }
         }
     }
+    const avr = scores.reduce((a, b) => (a + b)) / scores.length;
+    chartData.averageScore = avr || 0;
     return chartData;
 }
 
-const fetchData = async (ratings: any, ratings2: any,ratings3: any,props: IChartAreaCombinedProps) => {
+const fetchData = async (ratings: any, ratings2: any, ratings3: any, props: IChartAreaCombinedProps) => {
     const options: any = {
         method: 'GET',
         url: 'https://imdb8.p.rapidapi.com/actors/get-all-filmography',
@@ -150,8 +238,55 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
+const chartComponent = (name: string, chartData: IChartData, width: number, height: number, props: IChartAreaCombinedProps) => {
+    const range = [200, 800];
+    const data = chartData.films.sort(dynamicSortMultiple("year"));
+
+    return (
+        <div style={{ width: width - 221, height: height - 100 }}>
+            <ResponsiveContainer>
+                <ScatterChart
+                    margin={{ top: 50, right: 30, left: 20, bottom: 5 }}>
+                    <XAxis
+                        label={{ value: "Years", offset: -10, position: 'insideBottomRight', fontWeight: 500 }}
+                        dataKey="year"
+                        tickCount={8}
+                        type='number'
+                        padding={{ left: 30, right: 30 }}
+                        fontFamily="sans-serif"
+                        fontSize='1.2rem'
+                        fontWeight={700}
+                        strokeWidth={10}
+                        domain={['dataMin', 'dataMax']}
+                    />
+                    <YAxis
+                        label={{ value: "Imdb Rating", angle: -90, offset: 10, position: 'insideLeft', fontWeight: 500 }}
+                        dataKey="rating"
+                        type='number'
+                        tickCount={8}
+                        fontSize='1.2rem'
+                        fontFamily="sans-serif"
+                        fontWeight={700}
+                        strokeWidth={10}
+                        padding={{ top: 30, bottom: 30 }}
+                        domain={['dataMin', 'dataMax']}
+                    />
+                    <ZAxis scale='log' type="number" dataKey="rating" range={range} />
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <Tooltip content={<CustomTooltip props={props} />} />
+                    <Legend />
+                    <Scatter name={name} data={data} fill="#f3ce13" >
+                        <LabelList dataKey="rating" style={{ pointerEvents: 'none' }} />
+                    </Scatter>
+                </ScatterChart>
+            </ResponsiveContainer>
+        </div>
+
+    )
+}
+
 const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: IChartAreaCombinedProps) => {
-    const [chartData, setChartData] = useState<IFilmData[]>([]);
+    const [chartData, setChartData] = useState<IChartData | undefined>(undefined);
     const [name, setName] = useState<string>('');
     const [noData, setNoData] = useState<boolean>(false);
     const { width, height } = useWindowSize();
@@ -162,13 +297,13 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
             return mapFromArray(data, 'tconst');
         },
         []);
-            const ratings2 = React.useMemo(
+    const ratings2 = React.useMemo(
         () => {
             const data = Object.values(ratingsFile2);
             return mapFromArray(data, 'tconst');
         },
         []);
-            const ratings3 = React.useMemo(
+    const ratings3 = React.useMemo(
         () => {
             const data = Object.values(ratingsFile3);
             return mapFromArray(data, 'tconst');
@@ -177,14 +312,13 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
 
     useEffect(() => {
         setNoData(false);
-        setChartData([]);
+        setChartData(undefined);
         const fetch = async () => {
-            const dataToFetch = await fetchData(ratings, ratings2, ratings3,props);
+            const dataToFetch = await fetchData(ratings, ratings2, ratings3, props);
             if (dataToFetch) {
                 if (dataToFetch.films.length) {
                     setNoData(false);
-                    const data = dataToFetch.films.sort(dynamicSortMultiple("year"));
-                    setChartData(data);
+                    setChartData(dataToFetch);
                     let plotName = '';
                     if (props.selectedProf === 'Actors') {
                         plotName = `Staring ${dataToFetch.name}`;
@@ -203,48 +337,29 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
         }
         fetch();
     }, [props.selectedName]);
-
     return (
-        <div style={{ width: width - 30, height: height - 100 }}>
-            {noData
-                ? <Grid container className={props.classes.loading}>
-                    <Typography className={props.classes.noDataText}>
-                        {'Insufficient voters or rating data, please make another selection'}
+        noData
+            ? <Grid container className={props.classes.loading
+            } >
+                <Typography className={props.classes.noDataText}>
+                    {'Insufficient voters or rating data, please make another selection'}
+                </Typography>
+            </Grid >
+            : chartData && chartData.films.length
+                ? <Grid container className={props.classes.chartArea}>
+                    <Grid item>
+                        {chartComponent(name, chartData, width, height, props)}
+                    </Grid>
+                    <Grid item>
+                        {infoArea(chartData, props)}
+                    </Grid>
+                </Grid>
+                : <Grid container className={props.classes.loading}>
+                    <SiImdb id='loading_icon' className={props.classes.loadingIcon} />
+                    <Typography className={props.classes.loadingText}>
+                        Loading...
                     </Typography>
                 </Grid>
-                : chartData.length
-                    ? <ResponsiveContainer>
-                        <ScatterChart
-                            margin={{ top: 50, right: 30, left: 20, bottom: 5 }}>
-                            <XAxis
-                                label={{ value: "Years", offset: -10, position: 'insideBottomRight' }}
-                                dataKey="year"
-                                tickCount={8}
-                                type='number'
-                                padding={{ left: 30, right: 30 }}
-                                domain={['dataMin', 'dataMax']}
-                            />
-                            <YAxis
-                                label={{ value: "Imdb Rating", angle: -90, offset: 10, position: 'insideLeft' }}
-                                dataKey="rating"
-                                type='number'
-                                tickCount={8}
-                                padding={{ top: 30, bottom: 30 }}
-                                domain={['dataMin', 'dataMax']}
-                            />
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <Tooltip content={<CustomTooltip props={props} />} />
-                            <Legend />
-                            <Scatter name={name} data={chartData} fill="#f3ce13" />
-                        </ScatterChart>
-                    </ResponsiveContainer>
-                    : <Grid container className={props.classes.loading}>
-                        <SiImdb id='loading_icon' className={props.classes.loadingIcon} />
-                        <Typography className={props.classes.loadingText}>
-                            Loading...
-                    </Typography>
-                    </Grid>}
-        </div>
     );
 }
 

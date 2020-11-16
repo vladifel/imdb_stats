@@ -17,6 +17,7 @@ import Typography from "@material-ui/core/Typography";
 import Clear from "@material-ui/icons/Clear";
 import { useVirtual } from "react-virtual";
 import HighlightSearchText from "./HighlightSearchText";
+import { useEffect } from 'react';
 const styles = () =>
     createStyles({
         cssFocus: {
@@ -24,7 +25,6 @@ const styles = () =>
                 color: "#f3ce13",
                 fontWeight: 1000
             },
-
         },
         divider: {
             marginTop: '0.5rem',
@@ -86,7 +86,7 @@ const useOutlinedInputStyles = makeStyles(() => ({
 
 export interface IListBoxProps {
     dataMap: any[];
-
+    value: string;
     handleLineClicked: (module: any) => void;
 }
 
@@ -218,6 +218,8 @@ const ListBox: React.FunctionComponent<IListBoxCombinedProps> = (props: IListBox
         estimateSize: useCallback(() => 36, []),
         overscan: 8,
     });
+
+    useEffect(() => setSearchText(props.value), [props.value]);
 
     return (
         <Grid container direction={"column"}>

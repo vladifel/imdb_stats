@@ -1,5 +1,6 @@
 import React, { Fragment, useState } from 'react';
 import classNames from "classnames";
+import axios from "axios";
 import { createStyles, WithStyles, withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import actorsFile from '../assets/actors.json';
@@ -12,6 +13,7 @@ import ForwardIcon from '@material-ui/icons/Forward';
 import ChartArea from './ChartArea';
 import { mapFromArray } from '../helpers/mapFromArray';
 import ListBox from '../helpers/ListBox';
+import Typography from '@material-ui/core/Typography';
 
 const styles = () =>
     createStyles({
@@ -55,15 +57,16 @@ const styles = () =>
             width: '10rem',
             marginRight: '0.5rem'
         },
-        rightPart: {
-            paddingLeft: '5rem'
+        rating: {
+            display: "flex",
+            justifyContent: 'flex-end'
         },
         root: {
             display: "flex",
             backgroundColor: '#ffffff',
+            justifyContent: 'space-between',
             flexDirection: "row",
             flexWrap: 'nowrap',
-            alignItems: 'center',
             minHeight: '6.25rem',
             boxShadow: '0 0.125rem 0.3125rem 0 rgba(243, 206, 19, 0.5)',
         },
@@ -72,6 +75,18 @@ const styles = () =>
                 color: "#f3ce13",
                 fontWeight: 1000
             },
+        },
+        rootLeft: {
+            display: "flex",
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            marginLeft: '5rem'
+        },
+        rootRight: {
+            display: "flex",
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            marginRight: '4.3rem'
         }
     });
 
@@ -95,6 +110,7 @@ export interface IChartData {
     akas: string[];
     image: any;
     profession: string;
+    averageScore: number;
     films: IFilmData[];
 }
 
@@ -125,6 +141,7 @@ const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: 
     const [selectedProf, setSelectedProf] = useState<string | null>(null);
     const [dataLoaded, setDataLoaded] = useState<any>(undefined);
     const [selectedName, setSelectedName] = useState<IPersonData | null>(null);
+    const [nameToDisplay, setNameToDisplay] = useState<any>(undefined);
 
     const actors = React.useMemo(() => {
         const data = Object.values(actorsFile);
@@ -152,6 +169,21 @@ const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: 
         () => {
             const data = Object.values(directorsFile);
             return mapFromArray(data, 'primaryName');
+            // const fetch = async () => {
+            //     const options: any = {
+            //         method: 'GET',
+            //         url: 'https://firebasestorage.googleapis.com/v0/b/imdbstatdata.appspot.com/o/directors.json?alt=media&token=777ac648-dfb9-41cc-8fab-728c02659767',
+            //     };
+
+            //     return await axios.request(options).then(async response => {
+            //         return await response.data
+            //     }).catch(error => console.error(error));
+            // }
+            // const getDirectors = async () => {
+            //     const data = await fetch();
+            //     return mapFromArray(Object.values(data), 'primaryName');
+            // }
+            // return getDirectors();
         },
         []);
     const producers = React.useMemo(
@@ -167,12 +199,14 @@ const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: 
         },
         []);
 
-    const handleSetSelectedProf = (event: any, value: string | null) => {
+    const handleSetSelectedProf = async (event: any, value: string | null) => {
         setSelectedProf(value);
         setDataLoaded(undefined);
         if (value === 'Actors') {
             setDataLoaded(actors);
         } else if (value === 'Directors') {
+            // const dir = await directors.then(res => res);
+            // setDataLoaded(dir);
             setDataLoaded(directors);
         } else if (value === 'Producers') {
             setDataLoaded(producers);
@@ -183,35 +217,37 @@ const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: 
 
     const handleSearch = (value: string) => {
         setSelectedName(dataLoaded[value as any]);
+        setNameToDisplay(value);
     }
-
     return (
         <Grid container>
-            <Grid container
-                className={classNames(props.classes.root, props.classes.rightPart)}
-            >
-                <Grid item className={props.classes.profSelect}>
-                    {profSelect(selectedProf, handleSetSelectedProf, props)}
+            <Grid container className={props.classes.root}>
+                <Grid className={props.classes.rootLeft}>
+                    <Grid item className={props.classes.profSelect}>
+                        {profSelect(selectedProf, handleSetSelectedProf, props)}
+                    </Grid>
+                    {dataLoaded
+                        ? <Fragment>
+                            <Grid item className={props.classes.iconMargins}>
+                                <ForwardIcon className={props.classes.icon} />
+                            </Grid>
+                            <Grid item className={props.classes.nameSelectNew}>
+                                <ListBox
+                                    dataMap={dataLoaded}
+                                    value={nameToDisplay}
+                                    handleLineClicked={handleSearch}
+                                />
+                            </Grid>
+                        </Fragment>
+                        : undefined}
                 </Grid>
-                {dataLoaded
-                    ? <Fragment>
-                        <Grid item className={props.classes.iconMargins}>
-                            <ForwardIcon className={props.classes.icon} />
-                        </Grid>
-                        <Grid item className={props.classes.nameSelectNew}>
-                            <ListBox
-                                dataMap={dataLoaded}
-                                handleLineClicked={handleSearch}
-                            />
-                        </Grid>
-                    </Fragment>
-                    : undefined}
             </Grid>
             <Grid item style={{ width: '100%', height: '100%' }}>
-                {selectedName && selectedProf ? <ChartArea
-                    selectedProf={selectedProf}
-                    selectedName={selectedName}
-                /> : undefined}
+                {selectedName && selectedProf
+                    ? <ChartArea
+                        selectedProf={selectedProf}
+                        selectedName={selectedName}
+                    /> : undefined}
             </Grid>
         </Grid>
     );
