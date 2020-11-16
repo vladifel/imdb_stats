@@ -12,9 +12,3 @@
     transform: rotate(360deg);
   }
 }
-
-.recharts-wrapper .recharts-y-axis .recharts-cartesian-axis-tick text {
-  font-family: sans-serif;
-  font-size: 4rem !important;
-  fill: red;
-}

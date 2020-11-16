@@ -23,33 +23,73 @@ import ratingsFile2 from '../assets/ratings2.json';
 import ratingsFile3 from '../assets/ratings3.json';
 import { IChartData, IFilmData, IPersonData } from './LandingPage';
 import './ChartArea.css';
+import TooltipMui from '@material-ui/core/Tooltip';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
+import Link from '@material-ui/core/Link';
+import imdb from 'imdb-api';
+import classNames from 'classnames';
 
 const styles = () =>
     createStyles({
         chartArea: {
             display: 'flex',
             flexDirection: 'row',
+            flexWrap: 'nowrap'
         },
         divider: {
             marginTop: '0.5rem',
             marginLeft: 0,
+            backgroundColor: 'black',
+            boxShadow: '0 0.125rem 0.3125rem 0 rgba(0, 0, 0, 1)',
+        },
+        highlightedText: {
+            //fontWeight: 700,
+            marginRight: '0.3rem'
         },
         infoArea: {
             display: 'flex',
             flexDirection: 'column',
+            flexWrap: 'nowrap',
+            width: '13.8rem',
+        },
+        infoAreaFirstColor: {
             backgroundColor: "#f3ce13",
-            height: '100%',
-            width: '12.75rem'
+            boxShadow: '0 0.125rem 0.3125rem 0 rgba(243,206,19,1)'
+        },
+        infoAreaSecondColor: {
+            backgroundColor: "#fc8403",
+            boxShadow: '0 0.125rem 0.3125rem 0 rgba(252,132,3,1)'
         },
         infoAreaBottom: {
-
+            overflow: 'auto'
+        },
+        infoAreaNameRow: {
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            margin: '0 1rem 0.5rem'
+        },
+        infoAreaNameRowText: {
+            fontSize: '1.6rem',
+            fontWeight: 800,
         },
         infoAreaTop: {
-
+            marginTop: '1rem'
+        },
+        infoAreaTopRows: {
+            display: 'flex',
+            flexDirection: 'row',
+            marginLeft: '1rem'
+        },
+        linkColor: {
+            color: '#252525',
+            cursor: 'pointer',
+        },
+        listText: {
+            fontSize: '1.2rem'
         },
         loading: {
             height: 'inherit',
@@ -78,33 +118,52 @@ const styles = () =>
 interface IChartAreaProps {
     selectedProf: string;
     selectedName: IPersonData;
+    selectedProfTwo: string | null;
+    selectedNameTwo: IPersonData | null;
 }
 
 type IChartAreaCombinedProps = IChartAreaProps & WithStyles<typeof styles>;
 
 
-const infoArea = (chartData: IChartData, props: IChartAreaCombinedProps) => {
+const infoArea = (isSecond: boolean, chartData: IChartData, height: number, props: IChartAreaCombinedProps) => {
+    const name: string[] = chartData.name.split(' ');
+    const fn = name[0];
+    name.shift();
     return (
-        <Grid container className={props.classes.infoArea}>
+        <Grid container
+            style={{ height: height - 100 }}
+            className={classNames(props.classes.infoArea, isSecond ? props.classes.infoAreaSecondColor : props.classes.infoAreaFirstColor)}>
             <Grid item className={props.classes.infoAreaTop}>
-                <Grid>
-                    <Typography>
-                        Name:
-                </Typography>
-                    <Typography>
-                        {` ${chartData.name}`}
+                <Grid container className={props.classes.infoAreaNameRow}>
+                    <Typography noWrap >
+                        <Link
+                            className={classNames(props.classes.linkColor, props.classes.infoAreaNameRowText)}
+                            href={`https://www.imdb.com/name/${chartData.id}/`}
+                            target="_blank"
+                        >
+                            {fn}
+                        </Link>
+                    </Typography>
+                    <Typography noWrap >
+                        <Link
+                            className={classNames(props.classes.linkColor, props.classes.infoAreaNameRowText)}
+                            href={`https://www.imdb.com/name/${chartData.id}/`}
+                            target="_blank"
+                        >
+                            {name && name.join(' ')}
+                        </Link>
                     </Typography>
                 </Grid>
-                <Grid>
-                    <Typography>
-                        Number of movies:
+                <Grid container className={props.classes.infoAreaTopRows}>
+                    <Typography className={props.classes.highlightedText}>
+                        No. of movies:
                 </Typography>
                     <Typography>
                         {` ${chartData.films.length}`}
                     </Typography>
                 </Grid>
-                <Grid>
-                    <Typography>
+                <Grid container className={props.classes.infoAreaTopRows}>
+                    <Typography className={props.classes.highlightedText}>
                         Average Rating:
                 </Typography>
                     <Typography>
@@ -113,7 +172,7 @@ const infoArea = (chartData: IChartData, props: IChartAreaCombinedProps) => {
                 </Grid>
             </Grid>
             <Divider variant="inset" className={props.classes.divider} />
-            <Grid item className={props.classes.infoAreaBottom}>
+            <Grid id='info_scroll_area' item style={{ height: height - 250 }} className={props.classes.infoAreaBottom}>
                 <List >
                     {chartData.films.map(film => {
                         let votesString = '';
@@ -124,9 +183,17 @@ const infoArea = (chartData: IChartData, props: IChartAreaCombinedProps) => {
                             }
                         }
                         return (
-                            <ListItem>
+                            <ListItem key={film.id}>
                                 <ListItemText
-                                    primary={`${film.year}: ${film.title}`}
+                                    primary={
+                                        <Link
+                                            className={classNames(props.classes.linkColor, props.classes.listText)}
+                                            href={`https://www.imdb.com/title/${film.id}/`}
+                                            target="_blank"
+                                        >
+                                            {`${film.year}: ${film.title}`}
+                                        </Link>
+                                    }
                                     secondary={`Rating: ${film.rating} (${votesString} votes)`}
                                 />
                             </ListItem>
@@ -207,11 +274,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         const rowData = payload[0].payload
         return (
             <Grid style={{
-                backgroundColor: 'rgba(243, 206, 19, 0.5)'
+                backgroundColor: 'rgba(243, 206, 19, 0.5)',
+                borderRadius: '0.6rem'
             }}>
                 <Typography style={{
                     margin: '0 0.5rem',
-                    fontWeight: 1000
+                    fontSize: '1.2rem'
                 }}>
                     {rowData.title}
                 </Typography>
@@ -238,46 +306,83 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-const chartComponent = (name: string, chartData: IChartData, width: number, height: number, props: IChartAreaCombinedProps) => {
+const chartComponent = (name: string[], chartData: IChartData[], width: number, height: number, props: IChartAreaCombinedProps) => {
     const range = [200, 800];
-    const data = chartData.films.sort(dynamicSortMultiple("year"));
-
+    const dataOne = chartData[0].films.sort(dynamicSortMultiple("year"));
+    const dataTwo = chartData.length === 2 ? chartData[1].films.sort(dynamicSortMultiple("year")) : undefined;
+    console.log(chartData)
     return (
         <div style={{ width: width - 221, height: height - 100 }}>
             <ResponsiveContainer>
                 <ScatterChart
                     margin={{ top: 50, right: 30, left: 20, bottom: 5 }}>
                     <XAxis
-                        label={{ value: "Years", offset: -10, position: 'insideBottomRight', fontWeight: 500 }}
+                        label={{
+                            value: "Years",
+                            offset: -10,
+                            position: 'insideBottomRight',
+                            fontWeight: 500,
+                            fontFamily: "Impact"
+                        }}
                         dataKey="year"
                         tickCount={8}
                         type='number'
                         padding={{ left: 30, right: 30 }}
-                        fontFamily="sans-serif"
+                        fontFamily="Impact"
                         fontSize='1.2rem'
-                        fontWeight={700}
-                        strokeWidth={10}
+                        stroke='black'
+                        strokeWidth={6}
                         domain={['dataMin', 'dataMax']}
                     />
                     <YAxis
-                        label={{ value: "Imdb Rating", angle: -90, offset: 10, position: 'insideLeft', fontWeight: 500 }}
+                        label={{
+                            value: "Imdb Rating",
+                            angle: -90,
+                            offset: 5,
+                            position: 'insideLeft',
+                            fontWeight: 500,
+                            fontFamily: "Impact"
+                        }}
                         dataKey="rating"
                         type='number'
                         tickCount={8}
                         fontSize='1.2rem'
-                        fontFamily="sans-serif"
-                        fontWeight={700}
-                        strokeWidth={10}
+                        fontFamily="Impact"
+                        strokeWidth={6}
+                        stroke='black'
                         padding={{ top: 30, bottom: 30 }}
                         domain={['dataMin', 'dataMax']}
                     />
-                    <ZAxis scale='log' type="number" dataKey="rating" range={range} />
+                    <ZAxis
+                        font="Impact"
+                        scale='log'
+                        type="number"
+                        dataKey="rating"
+                        range={range}
+                    />
                     <CartesianGrid strokeDasharray="3 3" />
                     <Tooltip content={<CustomTooltip props={props} />} />
                     <Legend />
-                    <Scatter name={name} data={data} fill="#f3ce13" >
-                        <LabelList dataKey="rating" style={{ pointerEvents: 'none' }} />
+                    <Scatter name={name[0]} data={dataOne} fill="#f3ce13" >
+                        <LabelList
+                            dataKey="rating"
+                            style={{
+                                fontFamily: "Impact",
+                                fontSize: '0.8rem',
+                                pointerEvents: 'none'
+                            }}
+                        />
                     </Scatter>
+                    {dataTwo ? <Scatter name={name[1]} data={dataTwo} fill="#fc8403" >
+                        <LabelList
+                            dataKey="rating"
+                            style={{
+                                fontFamily: "Impact",
+                                fontSize: '0.8rem',
+                                pointerEvents: 'none'
+                            }}
+                        />
+                    </Scatter> : undefined}
                 </ScatterChart>
             </ResponsiveContainer>
         </div>
@@ -286,10 +391,332 @@ const chartComponent = (name: string, chartData: IChartData, width: number, heig
 }
 
 const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: IChartAreaCombinedProps) => {
-    const [chartData, setChartData] = useState<IChartData | undefined>(undefined);
-    const [name, setName] = useState<string>('');
+    const [chartData, setChartData] = useState<IChartData[] | undefined>(undefined);
+    const [name, setName] = useState<string[]>([]);
     const [noData, setNoData] = useState<boolean>(false);
     const { width, height } = useWindowSize();
+
+    const data: IChartData = {
+        akas: ["Chris Nolan "],
+        id: "nm0634240",
+        averageScore: 7.96,
+        name: "Christopher Nolan Nolan Nolan",
+        profession: "Directors",
+        image: {
+            height: 400,
+            id: "/name/nm0634240/images/rm2047771392",
+            url: "https://m.media-amazon.com/images/M/MV5BNjE3NDQyOTYyMV5BMl5BanBnXkFtZTcwODcyODU2Mw@@._V1_.jpg",
+            width: 289
+        },
+        films: [
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 1989
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 1996,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 1997
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 1998
+            },
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 1989
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 1996,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 1997
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 1998
+            },
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 1999
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 2000,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 2001
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 2002
+            },
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 2003
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 2004,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 2005
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 2006
+            },
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 2007
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 2008,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 2009
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 2010
+            }
+        ]
+    }
+
+    const data2: IChartData = {
+        akas: ["Chris Nolan "],
+        id: "nm0634240",
+        averageScore: 7.96,
+        name: "Christopher Nolan Nolan Nolan",
+        profession: "Directors",
+        image: {
+            height: 400,
+            id: "/name/nm0634240/images/rm2047771392",
+            url: "https://m.media-amazon.com/images/M/MV5BNjE3NDQyOTYyMV5BMl5BanBnXkFtZTcwODcyODU2Mw@@._V1_.jpg",
+            width: 289
+        },
+        films: [
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 1988
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 1995,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 1996
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 1997
+            },
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 1988
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 1997,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 1996
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 1999
+            },
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 1995
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 2001,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 2002
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 2003
+            },
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 2004
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 2005,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 2006
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 2007
+            },
+            {
+                id: "tt6386408",
+                image: undefined,
+                imdbVotes: 128,
+                rating: 7.3,
+                title: "Tarantella",
+                year: 2008
+            }, {
+                id: "tt6386412",
+                image: undefined,
+                imdbVotes: 96,
+                rating: 8,
+                title: "Larceny",
+                year: 2009,
+            }, {
+                id: "tt0411302",
+                image: { height: 1170, id: "/title/tt0411302/images/rm3995998720", url: "https://m.media-amazon.com/images/M/MV5BZTM0Nzk4ZD…MDAyNDc1MTViXkEyXkFqcGdeQXVyNDQ2MTMzODA@._V1_.jpg", width: 780 },
+                imdbVotes: 16261,
+                rating: 7.1,
+                title: "Doodlebug",
+                year: 2010
+            }, {
+                id: "tt0154506",
+                image: { height: 1199, id: "/title/tt0154506/images/rm2825270784", url: "https://m.media-amazon.com/images/M/MV5BMWZmNzk5M2…ZWVjODUwNTEzXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_.jpg", width: 809 },
+                imdbVotes: 85694,
+                rating: 7.5,
+                title: "Following",
+                year: 2011
+            }
+        ]
+    }
 
     const ratings = React.useMemo(
         () => {
@@ -309,34 +736,35 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
             return mapFromArray(data, 'tconst');
         },
         []);
-
     useEffect(() => {
         setNoData(false);
-        setChartData(undefined);
-        const fetch = async () => {
-            const dataToFetch = await fetchData(ratings, ratings2, ratings3, props);
-            if (dataToFetch) {
-                if (dataToFetch.films.length) {
-                    setNoData(false);
-                    setChartData(dataToFetch);
-                    let plotName = '';
-                    if (props.selectedProf === 'Actors') {
-                        plotName = `Staring ${dataToFetch.name}`;
-                    } else if (props.selectedProf === 'Directors') {
-                        plotName = `Directed by ${dataToFetch.name}`;
-                    } else if (props.selectedProf === 'Producers') {
-                        plotName = `Produced by ${dataToFetch.name}`;
-                    } else if (props.selectedProf === 'Writers') {
-                        plotName = `Written by ${dataToFetch.name}`;
-                    }
-                    setName(plotName);
-                } else {
-                    setNoData(true);
-                }
-            }
-        }
-        fetch();
-    }, [props.selectedName]);
+        setChartData([data, data2]);
+        // setNoData(false);
+        // props.selectedNameTwo ? setChartData(chartData[0]) : setChartData(undefined);
+        // const fetch = async () => {
+        //     const dataToFetch = await fetchData(ratings, ratings2, ratings3, props);
+        //     if (dataToFetch) {
+        //         if (dataToFetch.films.length) {
+        //             setNoData(false);
+        //             setChartData(dataToFetch);
+        //             let plotName = '';
+        //             if (props.selectedProf === 'Actors') {
+        //                 plotName = `Staring ${dataToFetch.name}`;
+        //             } else if (props.selectedProf === 'Directors') {
+        //                 plotName = `Directed by ${dataToFetch.name}`;
+        //             } else if (props.selectedProf === 'Producers') {
+        //                 plotName = `Produced by ${dataToFetch.name}`;
+        //             } else if (props.selectedProf === 'Writers') {
+        //                 plotName = `Written by ${dataToFetch.name}`;
+        //             }
+        //             setName(plotName);
+        //         } else {
+        //             setNoData(true);
+        //         }
+        //     }
+        // }
+        // fetch();
+    }, [props.selectedName, props.selectedNameTwo]);
     return (
         noData
             ? <Grid container className={props.classes.loading
@@ -345,13 +773,18 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
                     {'Insufficient voters or rating data, please make another selection'}
                 </Typography>
             </Grid >
-            : chartData && chartData.films.length
+            : chartData && chartData[0].films.length
                 ? <Grid container className={props.classes.chartArea}>
+                    {chartData.length === 2
+                        ? <Grid item>
+                            {infoArea(true, chartData[1], height, props)}
+                        </Grid>
+                        : undefined}
                     <Grid item>
-                        {chartComponent(name, chartData, width, height, props)}
+                        {chartComponent(name, chartData, chartData.length === 2 ? width - 220.8 : width, height, props)}
                     </Grid>
                     <Grid item>
-                        {infoArea(chartData, props)}
+                        {infoArea(false, chartData[0], height, props)}
                     </Grid>
                 </Grid>
                 : <Grid container className={props.classes.loading}>

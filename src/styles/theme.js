@@ -8,14 +8,13 @@ export default createMuiTheme({
         width: '100%',
     },
     typography: {
-        //useNextVariants: true,
-        fontFamily: 'Roboto',
+        fontFamily: ['Impact', 'Charcoal', 'sans- serif'],
         //textAlign: 'left',
         //fontSize: '20px'
     },
     palette: {
         primary: {
-            main: '#004b8d'
+            main: '#f3ce13'
         },
         secondary: {
             main: 'rgba(255, 255, 255, 0.01)'
@@ -37,5 +36,12 @@ export default createMuiTheme({
                 paddingLeft: '1rem'
             }
         }
+    },
+    overrides: {
+        MuiTypography: {
+            root: {
+                cursor: 'default'
+            }
+        },
     }
 });

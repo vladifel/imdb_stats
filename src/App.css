@@ -1,0 +1,16 @@
+::-webkit-scrollbar-thumb {
+    background-color:rgba(0, 0, 0, 0.15);
+    border-radius: 0.1rem;
+    border: none;
+}
+
+::-webkit-scrollbar {
+    width: 0.625rem;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    box-shadow: 0 0 0 30px white inset !important;
+}

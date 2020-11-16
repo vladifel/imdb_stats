@@ -23,7 +23,7 @@ const styles = () =>
         cssFocus: {
             '&.Mui-focused': {
                 color: "#f3ce13",
-                fontWeight: 1000
+                //fontWeight: 1000
             },
         },
         divider: {
@@ -31,7 +31,7 @@ const styles = () =>
             marginLeft: 0,
         },
         list: {
-            width: '16.3rem',
+            width: '14.5rem',
             margin: '0',
             padding: '0',
             backgroundColor: 'white'
@@ -219,7 +219,7 @@ const ListBox: React.FunctionComponent<IListBoxCombinedProps> = (props: IListBox
         overscan: 8,
     });
 
-    useEffect(() => setSearchText(props.value), [props.value]);
+    useEffect(() => setSearchText(props.value || ''), [props.value]);
 
     return (
         <Grid container direction={"column"}>
