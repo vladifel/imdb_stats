@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { createStyles, WithStyles, withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
@@ -21,7 +21,7 @@ import { dynamicSortMultiple } from '../helpers/Sorting';
 import ratingsFile from '../assets/ratings.json';
 import ratingsFile2 from '../assets/ratings2.json';
 import ratingsFile3 from '../assets/ratings3.json';
-import { IChartData, IFilmData, IPersonData } from './LandingPage';
+import { IChartData, IPersonData } from './LandingPage';
 import './ChartArea.css';
 import TooltipMui from '@material-ui/core/Tooltip';
 import List from '@material-ui/core/List';
@@ -29,91 +29,10 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Divider from '@material-ui/core/Divider';
 import Link from '@material-ui/core/Link';
-import imdb from 'imdb-api';
 import classNames from 'classnames';
-
-const styles = () =>
-    createStyles({
-        chartArea: {
-            display: 'flex',
-            flexDirection: 'row',
-            flexWrap: 'nowrap'
-        },
-        divider: {
-            marginTop: '0.5rem',
-            marginLeft: 0,
-            backgroundColor: 'black',
-            boxShadow: '0 0.125rem 0.3125rem 0 rgba(0, 0, 0, 1)',
-        },
-        highlightedText: {
-            //fontWeight: 700,
-            marginRight: '0.3rem'
-        },
-        infoArea: {
-            display: 'flex',
-            flexDirection: 'column',
-            flexWrap: 'nowrap',
-            width: '13.8rem',
-        },
-        infoAreaFirstColor: {
-            backgroundColor: "#f3ce13",
-            boxShadow: '0 0.125rem 0.3125rem 0 rgba(243,206,19,1)'
-        },
-        infoAreaSecondColor: {
-            backgroundColor: "#fc8403",
-            boxShadow: '0 0.125rem 0.3125rem 0 rgba(252,132,3,1)'
-        },
-        infoAreaBottom: {
-            overflow: 'auto'
-        },
-        infoAreaNameRow: {
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            margin: '0 1rem 0.5rem'
-        },
-        infoAreaNameRowText: {
-            fontSize: '1.6rem',
-            fontWeight: 800,
-        },
-        infoAreaTop: {
-            marginTop: '1rem'
-        },
-        infoAreaTopRows: {
-            display: 'flex',
-            flexDirection: 'row',
-            marginLeft: '1rem'
-        },
-        linkColor: {
-            color: '#252525',
-            cursor: 'pointer',
-        },
-        listText: {
-            fontSize: '1.2rem'
-        },
-        loading: {
-            height: 'inherit',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center'
-
-        },
-        loadingIcon: {
-            fontSize: '6rem',
-            color: "#f3ce13",
-            backgroundColor: '#252525',
-            borderRadius: '0.55rem',
-            marginBottom: '0.7rem'
-        },
-        loadingText: {
-            fontSize: '1.5rem'
-        },
-        noDataText: {
-            marginLeft: '1rem',
-            fontSize: '2rem'
-        }
-    });
+import Snackbar from '@material-ui/core/Snackbar';
+import Alert from '@material-ui/lab/Alert';
+import { styles } from './ChartArea.styles';
 
 interface IChartAreaProps {
     selectedProf: string;
@@ -205,7 +124,7 @@ const infoArea = (isSecond: boolean, chartData: IChartData, height: number, prop
         </Grid>
     )
 }
-const buildData = async (resultArray: any, ratings: any, ratings2: any, ratings3: any, props: IChartAreaCombinedProps): Promise<IChartData | undefined> => {
+const buildData = async (resultArray: any, ratings: any, props: IChartAreaCombinedProps): Promise<IChartData | undefined> => {
     if (!props.selectedName || !props.selectedProf) {
         return;
     }
@@ -230,7 +149,7 @@ const buildData = async (resultArray: any, ratings: any, ratings2: any, ratings3
             ) {
                 const rawId = film.id.split('/');
                 const id = rawId[2];
-                const rating = ratings[id] ? ratings[id] : ratings2[id] ? ratings2[id] : ratings3[id];
+                const rating = ratings[id];
                 if (rating) {
                     Number(rating.averageRating) && scores.push(Number(rating.averageRating));
                     const filmData = {
@@ -251,11 +170,12 @@ const buildData = async (resultArray: any, ratings: any, ratings2: any, ratings3
     return chartData;
 }
 
-const fetchData = async (ratings: any, ratings2: any, ratings3: any, props: IChartAreaCombinedProps) => {
+const fetchData = async (isSecond: boolean, ratings: any, props: IChartAreaCombinedProps) => {
+    const param = isSecond ? props.selectedNameTwo?.nconst : props.selectedName.nconst;
     const options: any = {
         method: 'GET',
         url: 'https://imdb8.p.rapidapi.com/actors/get-all-filmography',
-        params: { nconst: props.selectedName!.nconst },
+        params: { nconst: param },
         headers: {
             'x-rapidapi-key': 'b93408b0b0msh15310ee4e250e2bp15df7cjsnd43da7ee2788',
             'x-rapidapi-host': 'imdb8.p.rapidapi.com'
@@ -263,10 +183,26 @@ const fetchData = async (ratings: any, ratings2: any, ratings3: any, props: ICha
     };
 
     return await axios.request(options).then(async response => {
-        return await buildData(response.data, ratings, ratings2, ratings3, props);
+        return await buildData(response.data, ratings, props);
     }).catch(function (error) {
         console.error(error);
     });
+}
+
+const fetchRatings = async () => {
+    const options: any = {
+        method: 'GET',
+        url: 'https://firebasestorage.googleapis.com/v0/b/imdbstatdata.appspot.com/o/ratings.json?alt=media&token=9d5f585e-c7bc-428b-850c-936a38c5be94'
+    };
+
+    return await axios.request(options).then(async response => {
+        return await response.data
+    }).catch(error => console.error(error));
+}
+
+const getRatingsData = async () => {
+    const data = await fetchRatings();
+    return mapFromArray(Object.values(data), 'primaryName');
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -307,7 +243,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const chartComponent = (name: string[], chartData: IChartData[], width: number, height: number, props: IChartAreaCombinedProps) => {
-    const range = [200, 800];
     const dataOne = chartData[0].films.sort(dynamicSortMultiple("year"));
     const dataTwo = chartData.length === 2 ? chartData[1].films.sort(dynamicSortMultiple("year")) : undefined;
     console.log(chartData)
@@ -324,13 +259,18 @@ const chartComponent = (name: string[], chartData: IChartData[], width: number, 
                             fontWeight: 500,
                             fontFamily: "Impact"
                         }}
+                        tick={{
+                            fontFamily: "Impact",
+                            fontSize: '1.2rem'
+                        }}
                         dataKey="year"
                         tickCount={8}
                         type='number'
                         padding={{ left: 30, right: 30 }}
-                        fontFamily="Impact"
-                        fontSize='1.2rem'
+
                         stroke='black'
+                        /*
+                        // @ts-ignore */
                         strokeWidth={6}
                         domain={['dataMin', 'dataMax']}
                     />
@@ -346,19 +286,26 @@ const chartComponent = (name: string[], chartData: IChartData[], width: number, 
                         dataKey="rating"
                         type='number'
                         tickCount={8}
-                        fontSize='1.2rem'
-                        fontFamily="Impact"
+                        tick={{
+                            fontFamily: "Impact",
+                            fontSize: '1.2rem',
+                        }}
+                        /*
+                        // @ts-ignore */
                         strokeWidth={6}
                         stroke='black'
                         padding={{ top: 30, bottom: 30 }}
                         domain={['dataMin', 'dataMax']}
                     />
+
                     <ZAxis
+                        /*
+                        // @ts-ignore */
                         font="Impact"
                         scale='log'
                         type="number"
                         dataKey="rating"
-                        range={range}
+                        range={[700, 700]}
                     />
                     <CartesianGrid strokeDasharray="3 3" />
                     <Tooltip content={<CustomTooltip props={props} />} />
@@ -366,21 +313,21 @@ const chartComponent = (name: string[], chartData: IChartData[], width: number, 
                     <Scatter name={name[0]} data={dataOne} fill="#f3ce13" >
                         <LabelList
                             dataKey="rating"
-                            style={{
-                                fontFamily: "Impact",
-                                fontSize: '0.8rem',
-                                pointerEvents: 'none'
-                            }}
+                        // style={{
+                        //     fontFamily: "Impact",
+                        //     fontSize: '0.8rem',
+                        //     pointerEvents: 'none'
+                        // }}
                         />
                     </Scatter>
-                    {dataTwo ? <Scatter name={name[1]} data={dataTwo} fill="#fc8403" >
+                    {dataTwo ? <Scatter name={name[1]} data={dataTwo} fill="#fc8403" shape="star">
                         <LabelList
                             dataKey="rating"
-                            style={{
-                                fontFamily: "Impact",
-                                fontSize: '0.8rem',
-                                pointerEvents: 'none'
-                            }}
+                        // style={{
+                        //     fontFamily: "Impact",
+                        //     fontSize: '0.8rem',
+                        //     pointerEvents: 'none'
+                        // }}
                         />
                     </Scatter> : undefined}
                 </ScatterChart>
@@ -390,10 +337,38 @@ const chartComponent = (name: string[], chartData: IChartData[], width: number, 
     )
 }
 
+const setPlotName = (newName: string, isSecond: boolean, currName: string[], props: IChartAreaCombinedProps): string[] => {
+    let newPlotName = currName;
+    if (!isSecond) {
+        if (props.selectedProf === 'Actors') {
+            newPlotName[0] = `Staring ${newName}`;
+        } else if (props.selectedProf === 'Directors') {
+            newPlotName[0] = `Directed by ${newName}`;
+        } else if (props.selectedProf === 'Producers') {
+            newPlotName[0] = `Produced by ${newName}`;
+        } else if (props.selectedProf === 'Writers') {
+            newPlotName[0] = `Written by ${newName}`;
+        }
+    } else {
+        newPlotName.length === 1 && newPlotName.push('');
+        if (props.selectedProfTwo === 'Actors') {
+            newPlotName[1] = `Staring ${newName}`;
+        } else if (props.selectedProfTwo === 'Directors') {
+            newPlotName[1] = `Directed by ${newName}`;
+        } else if (props.selectedProfTwo === 'Producers') {
+            newPlotName[1] = `Produced by ${newName}`;
+        } else if (props.selectedProfTwo === 'Writers') {
+            newPlotName[1] = `Written by ${newName}`;
+        }
+    }
+    return newPlotName;
+}
+
 const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: IChartAreaCombinedProps) => {
     const [chartData, setChartData] = useState<IChartData[] | undefined>(undefined);
     const [name, setName] = useState<string[]>([]);
     const [noData, setNoData] = useState<boolean>(false);
+    const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
     const { width, height } = useWindowSize();
 
     const data: IChartData = {
@@ -722,6 +697,7 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
         () => {
             const data = Object.values(ratingsFile);
             return mapFromArray(data, 'tconst');
+            //return getRatingsData();
         },
         []);
     const ratings2 = React.useMemo(
@@ -736,9 +712,74 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
             return mapFromArray(data, 'tconst');
         },
         []);
+
     useEffect(() => {
         setNoData(false);
         setChartData([data, data2]);
+
+
+        // let plotName: string[] = [];
+        // const fetch = async () => {
+        //     if (!chartData) {
+        //         const dataToFetch = await fetchData(false, ratings, props);
+        //         if (dataToFetch) {
+        //             if (dataToFetch.films.length) {
+        //                 setNoData(false);
+        //                 setChartData([dataToFetch]);
+        //                 plotName = setPlotName(dataToFetch.name, false, name, props);
+        //                 setName(plotName);
+        //             } else {
+        //                 setNoData(true);
+        //                 setSnackbarOpen(true);
+        //             }
+        //         }
+        //     } else if (chartData.length === 1 && props.selectedNameTwo !== null) {
+        //         const dataToFetch = await fetchData(true, ratings, props);
+        //         if (dataToFetch) {
+        //             if (dataToFetch.films.length) {
+        //                 setNoData(false);
+        //                 const currChartData = chartData;
+        //                 currChartData.push(dataToFetch);
+        //                 setChartData(currChartData);
+        //                 plotName = setPlotName(dataToFetch.name, true, name, props);
+        //                 setName(plotName);
+        //             } else {
+        //                 setSnackbarOpen(true);
+        //             }
+        //         }
+        //     } else if (chartData.length === 2 && chartData[0].name !== props.selectedName.primaryName) {
+        //         const dataToFetch = await fetchData(false, ratings, props);
+        //         if (dataToFetch) {
+        //             if (dataToFetch.films.length) {
+        //                 setNoData(false);
+        //                 let currChartData = chartData;
+        //                 currChartData[0] = dataToFetch;
+        //                 setChartData(currChartData);
+        //                 plotName = setPlotName(dataToFetch.name, false, name, props);
+        //                 setName(plotName);
+        //             } else {
+        //                 setSnackbarOpen(true);
+        //             }
+        //         }
+        //     } else if (chartData.length === 2 && props.selectedNameTwo && chartData[1].name !== props.selectedNameTwo.primaryName) {
+        //         const dataToFetch = await fetchData(true, ratings, props);
+        //         if (dataToFetch) {
+        //             if (dataToFetch.films.length) {
+        //                 setNoData(false);
+        //                 let currChartData = chartData;
+        //                 currChartData[1] = dataToFetch;
+        //                 setChartData(currChartData);
+        //                 plotName = setPlotName(dataToFetch.name, true, name, props);
+        //                 setName(plotName);
+        //             } else {
+        //                 setSnackbarOpen(true);
+        //             }
+        //         }
+        //     }
+        // }
+        // fetch();
+
+
         // setNoData(false);
         // props.selectedNameTwo ? setChartData(chartData[0]) : setChartData(undefined);
         // const fetch = async () => {
@@ -765,34 +806,42 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
         // }
         // fetch();
     }, [props.selectedName, props.selectedNameTwo]);
+
     return (
-        noData
-            ? <Grid container className={props.classes.loading
-            } >
-                <Typography className={props.classes.noDataText}>
-                    {'Insufficient voters or rating data, please make another selection'}
-                </Typography>
-            </Grid >
-            : chartData && chartData[0].films.length
-                ? <Grid container className={props.classes.chartArea}>
-                    {chartData.length === 2
-                        ? <Grid item>
-                            {infoArea(true, chartData[1], height, props)}
-                        </Grid>
-                        : undefined}
-                    <Grid item>
-                        {chartComponent(name, chartData, chartData.length === 2 ? width - 220.8 : width, height, props)}
-                    </Grid>
-                    <Grid item>
-                        {infoArea(false, chartData[0], height, props)}
-                    </Grid>
-                </Grid>
-                : <Grid container className={props.classes.loading}>
-                    <SiImdb id='loading_icon' className={props.classes.loadingIcon} />
-                    <Typography className={props.classes.loadingText}>
-                        Loading...
+        <Fragment>
+            {noData && !chartData
+                ? <Grid container className={props.classes.loading
+                } >
+                    <Typography className={props.classes.noDataText}>
+                        {'Insufficient voters or rating data, please make another selection'}
                     </Typography>
-                </Grid>
+                </Grid >
+                : chartData && chartData[0].films.length
+                    ? <Grid container className={props.classes.chartArea}>
+                        {chartData.length === 2
+                            ? <Grid item>
+                                {infoArea(true, chartData[1], height, props)}
+                            </Grid>
+                            : undefined}
+                        <Grid item>
+                            {chartComponent(name, chartData, chartData.length === 2 ? width - 220.8 : width, height, props)}
+                        </Grid>
+                        <Grid item>
+                            {infoArea(false, chartData[0], height, props)}
+                        </Grid>
+                    </Grid>
+                    : <Grid container className={props.classes.loading}>
+                        <SiImdb id='loading_icon' className={props.classes.loadingIcon} />
+                        <Typography className={props.classes.loadingText}>
+                            Loading...
+                    </Typography>
+                    </Grid>}
+            <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+                <Alert onClose={() => setSnackbarOpen(false)} severity="error">
+                    Insufficient voters or rating data, please make another selection
+                </Alert>
+            </Snackbar>
+        </Fragment>
     );
 }
 

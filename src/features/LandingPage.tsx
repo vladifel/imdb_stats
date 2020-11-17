@@ -16,89 +16,7 @@ import { mapFromArray } from '../helpers/mapFromArray';
 import ListBox from '../helpers/ListBox';
 import Typography from '@material-ui/core/Typography';
 import { IconButton } from '@material-ui/core';
-
-const styles = () =>
-    createStyles({
-        icon: {
-            color: "#f3ce13",
-            fontSize: '2rem'
-        },
-        iconMargins: {
-            margin: '0 0.5rem'
-        },
-        iconTwoMargins: {
-            margin: '0 0.7rem'
-        },
-        inputRoot: {
-            color: "black",
-            "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(243, 206, 19, 0.7)",
-            },
-            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#f3ce13"
-            }
-        },
-        mediumIcon: {
-            fontSize: '1.25rem'
-        },
-        nameSelectNew: {
-            //width: '20rem'
-        },
-        options: {
-            fontSize: '0.8125rem',
-            lineHeight: '1.2',
-            color: '#252525',
-            '&[aria-selected="true"]': {
-                color: '#252525',
-                //fontWeight: 1000,
-                backgroundColor: '#ffffff'
-            },
-            '&[data-focus="true"]': {
-                color: '#252525',
-                backgroundColor: 'rgba(243, 206, 19, 0.7)',
-            },
-        },
-        page: {
-            overflow: 'hidden',
-            width: '100%',
-            height: '100%',
-        },
-        profSelect: {
-            width: '10rem',
-            marginRight: '0.5rem'
-        },
-        rating: {
-            display: "flex",
-            justifyContent: 'flex-end'
-        },
-        root: {
-            display: "flex",
-            backgroundColor: '#ffffff',
-            justifyContent: 'space-between',
-            flexDirection: "row",
-            flexWrap: 'nowrap',
-            minHeight: '6.25rem',
-            boxShadow: '0 0.125rem 0.3125rem 0 rgba(243, 206, 19, 0.9)',
-        },
-        rootAutoComplete: {
-            '& label.Mui-focused': {
-                color: "#f3ce13",
-                //fontWeight: 1000
-            },
-        },
-        rootLeft: {
-            display: "flex",
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            marginLeft: '5rem'
-        },
-        rootRight: {
-            display: "flex",
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            marginRight: '4.3rem'
-        }
-    });
+import { styles } from './LandingPage.styles';
 
 export interface IPersonData {
     nconst: string;
@@ -147,6 +65,35 @@ const profSelect = (isTwo: boolean, selectedProf: string | null, handleSetSelect
     )
 }
 
+const fetch = async (prof: string) => {
+    let url = '';
+    if (prof === 'Actors') {
+        url = 'https://firebasestorage.googleapis.com/v0/b/imdbstatdata.appspot.com/o/actors.json?alt=media&token=bde51ce1-5ec0-4601-b917-8da4bb3fa1cb';
+    } else if (prof === 'Directors') {
+        url = 'https://firebasestorage.googleapis.com/v0/b/imdbstatdata.appspot.com/o/directors.json?alt=media&token=777ac648-dfb9-41cc-8fab-728c02659767';
+    } else if (prof === 'Producers') {
+        url = 'https://firebasestorage.googleapis.com/v0/b/imdbstatdata.appspot.com/o/producers.json?alt=media&token=5ef5dd4d-ae56-4455-8fbd-e30773d28fe4';
+    } else if (prof === 'Writers') {
+        url = 'https://firebasestorage.googleapis.com/v0/b/imdbstatdata.appspot.com/o/writers.json?alt=media&token=46e99fc7-4981-480f-8a58-e39e574c2daf';
+    }
+    const options: any = {
+        method: 'GET',
+        url: url
+    };
+
+    return await axios.request(options).then(async response => {
+        return await response.data
+    }).catch(error => console.error(error));
+}
+
+const getData = async (prof: string) => {
+    const data: any = await fetch(prof);
+    if (data) {
+        return mapFromArray(Object.values(data!), 'primaryName');
+    }
+    return;
+}
+
 const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: ILandingPageCombinedProps) => {
     const [selectedProf, setSelectedProf] = useState<string | null>(null);
     const [dataLoaded, setDataLoaded] = useState<any>(undefined);
@@ -162,73 +109,51 @@ const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: 
     const actors = React.useMemo(() => {
         const data = Object.values(actorsFile);
         return mapFromArray(data, 'primaryName');
-        // const fetch = async () => {
-        //     const options: any = {
-        //         method: 'GET',
-        //         url: 'https://firebasestorage.googleapis.com/v0/b/imdbstatdata.appspot.com/o/actors.json?alt=media&token=bde51ce1-5ec0-4601-b917-8da4bb3fa1cb',
-        //     };
 
-        //     return await axios.request(options).then(response => {
-        //         return response.data
-        //     }).catch(function (error) {
-        //         console.error(error);
-        //     });
-        // }
-        // const getActors = async () => {
-        //     const data = await fetch();
-        //     return mapFromArray(Object.values(data), 'primaryName');
-        // }
-        // getActors();
+        //return getData('Actors');
     },
         []);
     const directors = React.useMemo(
         () => {
             const data = Object.values(directorsFile);
             return mapFromArray(data, 'primaryName');
-            // const fetch = async () => {
-            //     const options: any = {
-            //         method: 'GET',
-            //         url: 'https://firebasestorage.googleapis.com/v0/b/imdbstatdata.appspot.com/o/directors.json?alt=media&token=777ac648-dfb9-41cc-8fab-728c02659767',
-            //     };
 
-            //     return await axios.request(options).then(async response => {
-            //         return await response.data
-            //     }).catch(error => console.error(error));
-            // }
-            // const getDirectors = async () => {
-            //     const data = await fetch();
-            //     return mapFromArray(Object.values(data), 'primaryName');
-            // }
-            // return getDirectors();
+            //return getData('Directors');
         },
         []);
     const producers = React.useMemo(
         () => {
             const data = Object.values(producersFile);
             return mapFromArray(data, 'primaryName');
+            //return getData('Producers');
         },
         []);
     const writers = React.useMemo(
         () => {
             const data = Object.values(writersFile);
             return mapFromArray(data, 'primaryName');
+            //return getData('Writers');
         },
         []);
 
     const handleSetSelectedProf = async (isTwo: boolean, event: any, value: string | null) => {
         isTwo ? setSelectedProfTwo(value) : setSelectedProf(value);
         isTwo ? setDataLoadedTwo(undefined) : setDataLoaded(undefined);
+        let data: any = undefined;
         if (value === 'Actors') {
-            isTwo ? setDataLoadedTwo(actors) : setDataLoaded(actors);
+            //data = await actors.then(res => res);
+            data = actors;
         } else if (value === 'Directors') {
-            // const dir = await directors.then(res => res);
-            // setDataLoaded(dir);
-            isTwo ? setDataLoadedTwo(directors) : setDataLoaded(directors);
+            //data = await directors.then(res => res);
+            data = directors;
         } else if (value === 'Producers') {
-            isTwo ? setDataLoadedTwo(producers) : setDataLoaded(producers);
+            //data = await producers.then(res => res);
+            data = producers;
         } else if (value === 'Writers') {
-            isTwo ? setDataLoadedTwo(writers) : setDataLoaded(writers);
+            //data = await writers.then(res => res);
+            data = writers;
         }
+        isTwo ? setDataLoadedTwo(data) : setDataLoaded(data);
     }
 
     const handleSearch = (value: string) => {
