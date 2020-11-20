@@ -3,26 +3,31 @@ import { createStyles } from "@material-ui/core/styles";
 export const styles = () =>
     createStyles({
         icon: {
-            color: "#f3ce13",
-            fontSize: '2rem'
+            fontSize: '3rem'
         },
         iconMargins: {
             margin: '0 0.5rem'
         },
         iconTwoMargins: {
-            margin: '0 0.7rem'
+            margin: '0 1.5rem'
+        },
+        infoArea: {
+            //position: 'absolute',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center'
         },
         inputRoot: {
             color: "black",
             "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(243, 206, 19, 0.7)",
+                borderColor: "rgba(255,193,7, 0.7)",
             },
             "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#f3ce13"
+                borderColor: '#FFC107'
             }
         },
         mediumIcon: {
-            fontSize: '1.25rem'
+            fontSize: '3rem'
         },
         nameSelectNew: {
             //width: '20rem'
@@ -38,11 +43,12 @@ export const styles = () =>
             },
             '&[data-focus="true"]': {
                 color: '#252525',
-                backgroundColor: 'rgba(243, 206, 19, 0.7)',
+                backgroundColor: 'rgba(255,193,7, 0.7)',
             },
         },
         page: {
             overflow: 'hidden',
+            backgroundColor: '#FFFFFF',
             width: '100%',
             height: '100%',
         },
@@ -56,16 +62,18 @@ export const styles = () =>
         },
         root: {
             display: "flex",
-            backgroundColor: '#ffffff',
+            backgroundColor: '#66BB6A',
             justifyContent: 'space-between',
             flexDirection: "row",
             flexWrap: 'nowrap',
             minHeight: '6.25rem',
-            boxShadow: '0 0.125rem 0.3125rem 0 rgba(243, 206, 19, 0.9)',
+            width: '100%',
+            zIndex: 9,
+            boxShadow: '0 0.125rem 0.3125rem 0 rgba(255,193,7, 0.9)',
         },
         rootAutoComplete: {
             '& label.Mui-focused': {
-                color: "#f3ce13",
+                color: '#FFC107',
                 //fontWeight: 1000
             },
         },
@@ -73,12 +81,14 @@ export const styles = () =>
             display: "flex",
             justifyContent: 'flex-start',
             alignItems: 'center',
-            marginLeft: '5rem'
+            marginLeft: '1rem'
         },
         rootRight: {
+            position: 'absolute',
+            top: 0,
+            right: 0,
             display: "flex",
             alignItems: 'center',
             justifyContent: 'flex-end',
-            marginRight: '4.3rem'
         }
     });

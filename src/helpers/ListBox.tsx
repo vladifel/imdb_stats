@@ -18,6 +18,7 @@ import Clear from "@material-ui/icons/Clear";
 import { useVirtual } from "react-virtual";
 import HighlightSearchText from "./HighlightSearchText";
 import { useEffect } from 'react';
+import { IPersonData } from "../features/LandingPage";
 const styles = () =>
     createStyles({
         cssFocus: {
@@ -31,7 +32,7 @@ const styles = () =>
             marginLeft: 0,
         },
         list: {
-            width: '14.5rem',
+            width: '12.5rem',
             margin: '0',
             padding: '0',
             backgroundColor: 'white'
@@ -85,7 +86,7 @@ const useOutlinedInputStyles = makeStyles(() => ({
 }));
 
 export interface IListBoxProps {
-    dataMap: any[];
+    dataMap: Map<string, IPersonData> | undefined;
     value: string;
     handleLineClicked: (module: any) => void;
 }
@@ -189,14 +190,18 @@ const ListBox: React.FunctionComponent<IListBoxCombinedProps> = (props: IListBox
         const val = event.target.value.toLowerCase();
         setSearchText(val);
         const foundData: string[] = [];
-        Object.keys(data).forEach(key => {
-            if (key.includes(val)) {
-                foundData.push(key);
+        if (data) {
+            for (const key of data.keys()) {
+                key.includes(val) && foundData.push(data.get(key)!.Name);
             }
-        });
+        }
+
         if (foundData.length) {
             setFilteredData(foundData);
             setDropDownOpen(true);
+        }
+        if (val === '') {
+            setDropDownOpen(false);
         }
         setFilteredData(foundData);
         if (scrollAreaRef !== null && scrollAreaRef.current !== null) {
@@ -234,6 +239,7 @@ const ListBox: React.FunctionComponent<IListBoxCombinedProps> = (props: IListBox
                             Names
                         </InputLabel>
                         <OutlinedInput
+                            autoComplete='off'
                             id="outlined-adornment"
                             value={searchText}
                             onChange={handleSearchTextChange}

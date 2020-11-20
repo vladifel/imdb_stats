@@ -14,10 +14,10 @@ export default createMuiTheme({
     },
     palette: {
         primary: {
-            main: '#f3ce13'
+            main: '#1976D2'
         },
         secondary: {
-            main: 'rgba(255, 255, 255, 0.01)'
+            main: '#FFC107'
         },
     },
     globalStyles: {
@@ -38,6 +38,37 @@ export default createMuiTheme({
         }
     },
     overrides: {
+        MuiIconButton: {
+            root: {
+                color: '#FFC107',
+                padding: '0.3rem',
+                "&:active, &:hover, &.Mui-focusVisible": {
+                    color: 'rgba(255,133,7,1)',
+                    backgroundColor: 'transparent',
+                }
+            }
+        },
+        MuiButtonBase: {
+            root: {
+                minWidth: 0,
+                width: '1rem',
+            }
+        },
+        MuiCheckbox: {
+            colorSecondary: {
+                color: '#FFC107',
+                "&:active, &:hover, &.Mui-focusVisible": {
+                    color: 'rgba(255,133,7,1)',
+                    backgroundColor: 'transparent',
+                }
+            }
+        },
+        MuiListItemIcon: {
+            root: {
+                minWidth: 0,
+                width: '1rem'
+            }
+        },
         MuiTypography: {
             root: {
                 cursor: 'default'
