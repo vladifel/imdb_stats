@@ -60,15 +60,16 @@ const buildData = async (resultArray: any, props: IChartAreaCombinedProps): Prom
             const rawId = film.id.split('/');
             const id = rawId[2];
             const ratingData = await getRatingsData(id);
-            if (ratingData.Response !== 'False') {
-                Number(ratingData.imdbRating) && scores.push(Number(ratingData.imdbRating));
+            console.log(ratingData)
+            if (ratingData.rating) {
+                Number(ratingData.rating) && scores.push(Number(ratingData.rating));
                 const filmData = {
                     title: film.title,
                     year: film.year,
-                    image: film.image,
+                    image: film.poster,
                     id: id,
-                    rating: Number(ratingData.imdbRating) || null,
-                    imdbVotes: Number(ratingData.imdbVotes.split(',').join('')) || null,
+                    rating: Number(ratingData.rating) || null,
+                    imdbVotes: Number(ratingData.rating_votes) || null,
                 };
                 chartData.films.push(filmData);
             }
@@ -99,8 +100,16 @@ const fetchData = async (props: IChartAreaCombinedProps) => {
 const fetchRatings = async (movieId: string) => {
     const options: any = {
         method: 'GET',
-        url: `http://www.omdbapi.com/?i=${movieId}&apikey=262c131`,
-    };
+        url: `https://imdb-internet-movie-database-unofficial.p.rapidapi.com/film/${movieId}`,
+        headers: {
+          'x-rapidapi-key': 'b93408b0b0msh15310ee4e250e2bp15df7cjsnd43da7ee2788',
+          'x-rapidapi-host': 'imdb-internet-movie-database-unofficial.p.rapidapi.com'
+        }
+      };
+    // const options: any = {
+    //     method: 'GET',
+    //     url: `http://www.omdbapi.com/?i=${movieId}&apikey=262c131`,
+    // };
     return await axios.request(options)
         .then(response => response.data)
         .catch(error => console.error(error));
