@@ -8,7 +8,6 @@ export interface IChartDataItem {
     id: string;
     color: string;
     isShown: boolean;
-    isSelected: boolean;
     isInfoOpen: boolean;
     data: IChartData;
 }
@@ -27,11 +26,6 @@ export interface IChartDataAdded {
 
 export interface IChartDataRemoved {
     type: typeof ChartDataItemsActionTypes.CHART_DATA_REMOVED
-    id: string
-}
-
-export interface IChartDataSelected {
-    type: typeof ChartDataItemsActionTypes.CHART_DATA_SELECTED
     id: string
 }
 
@@ -55,7 +49,6 @@ export type ChartDataItemsActions =
     IChartDataShown
     | IChartDataAdded
     | IChartDataRemoved
-    | IChartDataSelected
     | IChartDataInfoShown
     | IChartDataInfoHidden
     | IChartDataColorChanged;
@@ -79,13 +72,6 @@ export const chartDataAdded = (chartDataItem: IChartDataItem): IChartDataAdded =
 export const chartDataRemoved = (id: string): IChartDataRemoved => {
     return {
         type: ChartDataItemsActionTypes.CHART_DATA_REMOVED,
-        id
-    }
-}
-
-export const chartDataSelected = (id: string): IChartDataSelected => {
-    return {
-        type: ChartDataItemsActionTypes.CHART_DATA_SELECTED,
         id
     }
 }
@@ -133,15 +119,6 @@ export const chartDataRemovedAsync = (id: string): ThunkAction<Promise<void>, {}
     return async (dispatch: ThunkDispatch<{}, {}, AnyAction>): Promise<void> => {
         return new Promise<void>((resolve) => {
             dispatch(chartDataRemoved(id))
-            resolve()
-        })
-    }
-}
-
-export const chartDataSelectedAsync = (id: string): ThunkAction<Promise<void>, {}, {}, AnyAction> => {
-    return async (dispatch: ThunkDispatch<{}, {}, AnyAction>): Promise<void> => {
-        return new Promise<void>((resolve) => {
-            dispatch(chartDataSelected(id))
             resolve()
         })
     }

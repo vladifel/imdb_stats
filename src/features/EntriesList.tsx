@@ -1,14 +1,12 @@
 import React, { Dispatch } from 'react';
 import { WithStyles, withStyles } from '@material-ui/core/styles';
+import { styles } from './EntriesList.styles';
+import { useDispatch, useSelector } from 'react-redux'
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
-import { styles } from './EntriesList.styles';
-import { chartDataColorChangedAsync, chartDataInfoShown, chartDataRemovedAsync, chartDataShownAsync, IChartDataItem } from '../store/actions/chartDataItems';
-import { useDispatch, useSelector } from 'react-redux'
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-import { ReduxState } from '../store';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -16,8 +14,17 @@ import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import DeleteOutlineOutlinedIcon from '@material-ui/icons/DeleteOutlineOutlined';
 import Typography from '@material-ui/core/Typography';
 import Tooltip from '@material-ui/core/Tooltip';
+import { 
+    chartDataColorChangedAsync, 
+    chartDataInfoShown, 
+    chartDataRemovedAsync, 
+    chartDataShownAsync, 
+    IChartDataItem 
+} from '../store/actions/chartDataItems';
+import { ReduxState } from '../store';
 import ColorSelector from '../helpers/ColorSelector';
 import { ColorResult } from 'react-color';
+import { infoAreaOpenAsync } from '../store/actions/openInfo';
 
 interface IEntriesListProps {
 
@@ -27,14 +34,18 @@ type IEntriesListCombinedProps = IEntriesListProps & WithStyles<typeof styles>;
 
 const checkboxComponent = (entry: IChartDataItem, dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
     return (
-        <ListItemIcon className={props.classes.iconsRightMargin}>
-            <Checkbox
-                edge="start"
-                checked={entry.isShown}
-                disableRipple
-                onChange={() => dispatch(chartDataShownAsync(entry.id, !entry.isShown))}
-            />
-        </ListItemIcon>
+        <Tooltip
+        title='Hide from chart'
+        >
+            <ListItemIcon className={props.classes.iconsRightMargin}>
+                <Checkbox
+                    edge="start"
+                    checked={entry.isShown}
+                    disableRipple
+                    onChange={() => dispatch(chartDataShownAsync(entry.id, !entry.isShown))}
+                />
+            </ListItemIcon>
+        </Tooltip>
     )
 }
 
@@ -43,46 +54,66 @@ const lensIconComponent = (entry: IChartDataItem, dispatch: Dispatch<any>, props
         id && dispatch(chartDataColorChangedAsync(id, color.hex))
     }
     return (
-        <ListItemIcon className={props.classes.colorIcon}>
-            <ColorSelector
-                //className={props.classes.smallIcon}
-                color={entry.color}
-                name={entry.id}
-                colorChange={handleColorChange}
-            />
-        </ListItemIcon>
+        <Tooltip
+            title='Change color'
+            enterDelay={500}
+            enterNextDelay={500}
+        >
+            <ListItemIcon className={props.classes.colorIcon}>
+                <ColorSelector
+                    color={entry.color}
+                    name={entry.id}
+                    colorChange={handleColorChange}
+                />
+            </ListItemIcon>
+        </Tooltip>
     )
 }
 
-const infoIconComponent = (entry: IChartDataItem, dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
+const infoIconComponent = (entry: IChartDataItem, infoAreaOpen: boolean, dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
     return (
-        <IconButton
-            edge="end"
-            disableFocusRipple
-            onClick={() => dispatch(chartDataInfoShown(entry.id))}
+        <Tooltip
+            title='Open artist info'
+            placement = 'top'
+            enterDelay={500}
+            enterNextDelay={500}
         >
-            <InfoOutlinedIcon
-                className={props.classes.icon}
-            />
-        </IconButton>
+            <IconButton
+                edge="end"
+                disableFocusRipple
+                onClick={() => {
+                    dispatch(chartDataInfoShown(entry.id))
+                    !infoAreaOpen && dispatch(infoAreaOpenAsync(true))
+                }}
+            >
+                <InfoOutlinedIcon
+                    className={props.classes.icon}
+                />
+            </IconButton>
+        </Tooltip>
     )
 }
 
 const eraseIconComponent = (entry: IChartDataItem, dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
     return (
-        <IconButton
-            edge="end"
-            disableFocusRipple
-            onClick={() => dispatch(chartDataRemovedAsync(entry.id))}
+        <Tooltip
+            title='Remove from chart'
+            enterDelay={500}
+            enterNextDelay={500}
         >
-            <DeleteOutlineOutlinedIcon
-                className={props.classes.icon}
-            />
-        </IconButton>
+            <IconButton
+                edge="end"
+                disableFocusRipple
+                onClick={() => dispatch(chartDataRemovedAsync(entry.id))}
+            >
+                <DeleteOutlineOutlinedIcon
+                    className={props.classes.icon}
+                />
+            </IconButton>
+        </Tooltip>
     )
 }
-const entriesListComponent = (entries: IChartDataItem[], dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
-    console.log(entries)
+const entriesListComponent = (entries: IChartDataItem[], infoAreaOpen: boolean,dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
     return (
         <List>
             {  entries && entries.map(entry => (
@@ -108,7 +139,7 @@ const entriesListComponent = (entries: IChartDataItem[], dispatch: Dispatch<any>
                     <ListItemSecondaryAction>
                         <Grid container className={props.classes.rightContainer}>
                             <Grid item>
-                                {infoIconComponent(entry, dispatch, props)}
+                                {infoIconComponent(entry, infoAreaOpen, dispatch, props)}
                             </Grid>
                             <Grid item>
                                 {eraseIconComponent(entry, dispatch, props)}
@@ -123,11 +154,12 @@ const entriesListComponent = (entries: IChartDataItem[], dispatch: Dispatch<any>
 
 const EntriesList: React.FunctionComponent<IEntriesListCombinedProps> = (props: IEntriesListCombinedProps) => {
     const chartDataItems: IChartDataItem[] = useSelector((state: ReduxState) => state.chartDataItemsReducer.chartDataItems);
+    const infoAreaOpen: boolean = useSelector((state: ReduxState) => state.openInfoReducer.isInfoOpen);
     const dispatch = useDispatch();
 
     return (
         <Grid container className={props.classes.page}>
-            {entriesListComponent(chartDataItems, dispatch, props)}
+            {entriesListComponent(chartDataItems, infoAreaOpen, dispatch, props)}
         </Grid>
     );
 }

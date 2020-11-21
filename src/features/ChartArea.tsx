@@ -1,7 +1,10 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import { createStyles, WithStyles, withStyles } from '@material-ui/core/styles';
+import {WithStyles, withStyles } from '@material-ui/core/styles';
+import { styles } from './ChartArea.styles';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
+import Snackbar from '@material-ui/core/Snackbar';
+import Alert from '@material-ui/lab/Alert';
 import { SiImdb } from 'react-icons/si';
 import axios from "axios";
 import {
@@ -15,29 +18,15 @@ import {
     LabelList,
     ZAxis
 } from 'recharts';
-import { mapFromArray } from '../helpers/mapFromArray';
-import { useWindowSize } from '../helpers/useWindowSize';
 import { dynamicSortMultiple } from '../helpers/Sorting';
-// import ratingsFile from '../assets/ratings.json';
-// import ratingsFile2 from '../assets/ratings2.json';
-// import ratingsFile3 from '../assets/ratings3.json';
 import { IChartData, IPersonData } from './LandingPage';
-import './ChartArea.css';
-import TooltipMui from '@material-ui/core/Tooltip';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import Divider from '@material-ui/core/Divider';
-import Link from '@material-ui/core/Link';
-import classNames from 'classnames';
-import Snackbar from '@material-ui/core/Snackbar';
-import Alert from '@material-ui/lab/Alert';
-import { styles } from './ChartArea.styles';
-import { chartDataAddedAsync, chartDataSelectedAsync, IChartDataItem } from '../store/actions/chartDataItems';
+import { chartDataAddedAsync, IChartDataItem } from '../store/actions/chartDataItems';
 import { useDispatch, useSelector } from 'react-redux';
-import { getRandomHexColor, getRandomRgbaColor } from '../helpers/ColorGenerator';
+import { getRandomRgbaColor } from '../helpers/ColorGenerator';
 import { ReduxState } from '../store';
 import EntriesList from './EntriesList';
+import { getVotesString } from '../helpers/getVotesString';
+import './ChartArea.css';
 
 interface IChartAreaProps {
     height: number;
@@ -61,8 +50,6 @@ const buildData = async (resultArray: any, props: IChartAreaCombinedProps): Prom
         films: []
     };
     const scores: number[] = [];
-    console.log(resultArray);
-    //resultArray.filmography.length
     for (let i = 0; i < resultArray.filmography.length; i++) {
         const film = resultArray.filmography[i];
         if (film.category !== 'self'
@@ -73,8 +60,7 @@ const buildData = async (resultArray: any, props: IChartAreaCombinedProps): Prom
             const rawId = film.id.split('/');
             const id = rawId[2];
             const ratingData = await getRatingsData(id);
-            console.log(ratingData);
-            if (ratingData) {
+            if (ratingData.Response !== 'False') {
                 Number(ratingData.imdbRating) && scores.push(Number(ratingData.imdbRating));
                 const filmData = {
                     title: film.title,
@@ -103,11 +89,6 @@ const fetchData = async (props: IChartAreaCombinedProps) => {
             'x-rapidapi-host': 'imdb8.p.rapidapi.com'
         }
     };
-    // const options: any = {
-    //     method: 'GET',
-    //     url: `https://imdb-api.com/en/API/Name/k_6pv1dob1/${param}`,
-    // };
-
     return await axios.request(options).then(async response => {
         return await buildData(response.data, props);
     }).catch(function (error) {
@@ -120,7 +101,6 @@ const fetchRatings = async (movieId: string) => {
         method: 'GET',
         url: `http://www.omdbapi.com/?i=${movieId}&apikey=262c131`,
     };
-
     return await axios.request(options)
         .then(response => response.data)
         .catch(error => console.error(error));
@@ -132,7 +112,8 @@ const getRatingsData = async (movieId: string) => (
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload) {
-        const rowData = payload[0].payload
+        const rowData = payload[0].payload;
+        const votesString = rowData.imdbVotes ? getVotesString(rowData.imdbVotes) : '';
         return (
             <Grid style={{
                 backgroundColor: 'rgba(255,193,7,0.5)',
@@ -158,22 +139,19 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                     margin: '0 0.5rem',
                     color: rowData.imdbVotes > 1000 ? 'black' : 'red'
                 }}>
-                    {`Voters: ${rowData.imdbVotes}`}
+                    {`Voters: ${votesString}`}
                 </Typography>
             </Grid>
         );
     }
-
     return null;
 };
 
 const chartComponent = (chartData: IChartDataItem[], props: IChartAreaCombinedProps) => {
-    console.log(chartData)
     const charts: any[] = []
     chartData.forEach(chart => {
         if (chart.isShown) {
             const sortedData = chart.data.films.sort(dynamicSortMultiple("year"));
-            console.log(sortedData)
             charts.push(
                 <Scatter
                     key={chart.id}
@@ -270,20 +248,15 @@ const chartComponent = (chartData: IChartDataItem[], props: IChartAreaCombinedPr
 const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: IChartAreaCombinedProps) => {
     const [noData, setNoData] = useState<boolean>(false);
     const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [sameSelected, setSameSelected] = useState<boolean>(false);
     const dispatch = useDispatch();
     const chartDataItems: IChartDataItem[] = useSelector((state: ReduxState) => state.chartDataItemsReducer.chartDataItems);
 
     useEffect(() => {
-        // setNoData(false);
-        // setChartData([data, data2]);
-        // const fetch = async () => {
-        //     const dataToFetch = await fetchData(false, props);
-
-        // }
-        // fetch();
-
         const fetch = async () => {
             if (chartDataItems.findIndex(item => item.id === props.selectedName.ImdbId) === -1) {
+                setIsLoading(true);
                 const dataToFetch = await fetchData(props);
                 if (dataToFetch) {
                     if (dataToFetch.films.length) {
@@ -292,9 +265,9 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
                             color: getRandomRgbaColor(0.5),
                             isShown: true,
                             isInfoOpen: false,
-                            isSelected: false,
                             data: dataToFetch
                         };
+                        setIsLoading(false);
                         dispatch(chartDataAddedAsync(dataToDispatch));
                         setNoData(false);
                     } else {
@@ -302,45 +275,37 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
                         setSnackbarOpen(true);
                     }
                 }
+            } else {
+                setSnackbarOpen(true);
+                setSameSelected(true);
             }
-
         }
         fetch();
     }, [props.selectedName]);
 
     return (
         <Fragment>
-            {noData && !chartDataItems
-                ? <Grid container className={props.classes.loading
-                } >
-                    <Typography className={props.classes.noDataText}>
-                        {'Insufficient voters or rating data, please make another selection'}
+            <Grid container className={props.classes.chartArea}>
+                <Grid item>
+                    <EntriesList />
+                </Grid>
+                <Grid item>
+                    {chartComponent(chartDataItems, props)}
+                </Grid>
+                {isLoading
+                ?<Grid container className={props.classes.loading}>
+                    <SiImdb id='loading_icon' className={props.classes.loadingIcon} />
+                    <Typography className={props.classes.loadingText}>
+                        Loading...
                     </Typography>
-                </Grid >
-                : chartDataItems.length
-                    ? <Grid container className={props.classes.chartArea}>
-                        {/*chartData.length === 2
-                            ? <Grid item>
-                                {infoArea(true, chartData[1], height, props)}
-                            </Grid>
-                        : undefined*/}
-                        <Grid item>
-                            <EntriesList />
-                            {/*infoArea(false, chartDataItems[0].data, height, props)*/}
-                        </Grid>
-                        <Grid item>
-                            {chartComponent(chartDataItems, props)}
-                        </Grid>
-                    </Grid>
-                    : <Grid container className={props.classes.loading}>
-                        <SiImdb id='loading_icon' className={props.classes.loadingIcon} />
-                        <Typography className={props.classes.loadingText}>
-                            Loading...
-                    </Typography>
-                    </Grid>}
+                </Grid>
+                :undefined}
+            </Grid>
             <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
                 <Alert onClose={() => setSnackbarOpen(false)} severity="error">
-                    Insufficient voters or rating data, please make another selection
+                    {sameSelected 
+                    ? `Film data for ${props.selectedName.Name} already displayed, please select another name` 
+                    : 'Insufficient voters or rating data, please make another selection'}
                 </Alert>
             </Snackbar>
         </Fragment>

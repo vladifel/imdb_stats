@@ -36,18 +36,23 @@ const colorSelectorButton = (
     props: IStyledColorSelectorProps
 ) => {
     return (
-        <Tooltip key={`${props.name}_color_selector`} title="Select Color">
-            <div>
+        <Tooltip 
+        key={`${props.name}_color_selector`} 
+        title="Select Color"
+        enterDelay={500}
+        enterNextDelay={500}
+        >
+            <div style={{border:'0.02rem solid black', borderRadius: '1rem', width: '1.2rem', height: '1.2rem'}}>
                 <IconButton
                     aria-owns={anchorColorSelector ? "ColorSelector-popper" : undefined}
                     aria-haspopup="true"
                     color="primary"
-                    style={{ color: props.color }}
+                    style={{ color: props.color, width: '1.2rem', height: '1.2rem', marginBottom: '0.5rem'}}
                     onClick={handleColorSelectorIconClick}
                     disabled={props.disabled ? props.disabled : false}
                     id={`${props.name}_color_button`}
                 >
-                    <LensIcon className={props.className} />
+                    <LensIcon />
                 </IconButton>
             </div>
         </Tooltip>

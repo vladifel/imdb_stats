@@ -1,28 +1,27 @@
-import React, { Dispatch, Fragment, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import classNames from "classnames";
-import axios from "axios";
 import { WithStyles, withStyles } from '@material-ui/core/styles';
+import { styles } from './InfoArea.styles';
+import { useDispatch, useSelector } from 'react-redux'
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
-import { styles } from './InfoArea.styles';
-import { chartDataInfoShown, chartDataRemovedAsync, chartDataSelected, chartDataShownAsync, chartDataSelectedAsync, IChartDataItem, chartDataInfoHiddenAsync } from '../store/actions/chartDataItems';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux'
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import { IChartDataItemsState } from '../store/reducers/chartDataItems';
-import { ReduxState } from '../store';
 import Typography from '@material-ui/core/Typography';
 import Tooltip from '@material-ui/core/Tooltip';
 import InfoIcon from '@material-ui/icons/Info';
 import Link from '@material-ui/core/Link';
 import Divider from '@material-ui/core/Divider';
-import { IChartData } from './LandingPage';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
-import Slide from '@material-ui/core/Slide';
+import { chartDataInfoShown, IChartDataItem, chartDataInfoHiddenAsync } from '../store/actions/chartDataItems';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import { ReduxState } from '../store';
+import { IChartData } from './LandingPage';
+import { infoAreaOpenAsync } from '../store/actions/openInfo';
+import { getVotesString } from '../helpers/getVotesString';
 
 interface IDrawerActions {
     drawerOpen: boolean;
@@ -88,15 +87,7 @@ const infoDataComponent = (chartData: IChartData, props: IInfoAreaCombinedProps)
     return (
         <List >
             {chartData.films.map(film => {
-                let votesString = '';
-                if (film.imdbVotes) {
-                    const votes = film.imdbVotes.toString();
-                    for (let i = 0; i < votes.length; i++) {
-                        (votes.length - i) % 3 === 0 && i !== 0
-                            ? votesString += `,${votes[i]}`
-                            : votesString += votes[i];
-                    }
-                }
+                const votesString = film.imdbVotes ? getVotesString(film.imdbVotes) : '';
                 return (
                     <ListItem key={film.id}>
                         <ListItemText
@@ -122,7 +113,7 @@ const infoDataComponent = (chartData: IChartData, props: IInfoAreaCombinedProps)
     )
 }
 
-const closedIconButton = (selectedIndex: number, chartDataItems: IChartDataItem[], drawerActions: IDrawerActions, props: IInfoAreaCombinedProps) => {
+const closedIconButton = (chartDataItems: IChartDataItem[], drawerActions: IDrawerActions, props: IInfoAreaCombinedProps) => {
     return (
         <Grid className={props.classes.topClosed}>
             <Grid className={classNames(
@@ -131,26 +122,32 @@ const closedIconButton = (selectedIndex: number, chartDataItems: IChartDataItem[
                     ? props.classes.buttonContainerOpen
                     : props.classes.buttonContainerClosed
             )}>
-                <IconButton
-                    onClick={drawerActions.drawerOpen
-                        ? drawerActions.handleDrawerClose
-                        : drawerActions.handleDrawerOpen
-                    }
+                <Tooltip
+                    title={`${drawerActions.drawerOpen ? 'Close' : 'Open'} artist info`}
+                    placement='left'
+                    enterDelay={500}
+                    enterNextDelay={500}
                 >
-                    <InfoIcon
-                        className={classNames(props.classes.icon, drawerActions.drawerOpen && props.classes.iconOpen)}
-                    />
-                </IconButton>
+                    <IconButton
+                        onClick={drawerActions.drawerOpen
+                            ? drawerActions.handleDrawerClose
+                            : drawerActions.handleDrawerOpen
+                        }
+                    >
+                        <InfoIcon
+                            className={classNames(props.classes.icon, drawerActions.drawerOpen && props.classes.iconOpen)}
+                        />
+                    </IconButton>
+                </Tooltip>
                 {drawerActions.drawerOpen
-                    ? itemSelection(selectedIndex, chartDataItems, drawerActions, props)
+                    ? itemSelection(chartDataItems, drawerActions, props)
                     : undefined}
             </Grid>
         </Grid>
     )
 }
 
-const itemSelection = (selectedIndex: number, chartDataItems: IChartDataItem[], drawerActions: IDrawerActions, props: IInfoAreaCombinedProps) => {
-
+const itemSelection = (chartDataItems: IChartDataItem[], drawerActions: IDrawerActions, props: IInfoAreaCombinedProps) => {
     return (
         <FormControl variant="outlined">
             <InputLabel id="info_select_label"
@@ -166,13 +163,15 @@ const itemSelection = (selectedIndex: number, chartDataItems: IChartDataItem[], 
                 className={props.classes.select}
                 value={drawerActions.itemSelected}
                 onChange={drawerActions.handleItemSelected}
-                label="Age"
             >
                 {chartDataItems.map(item => (
                     <MenuItem
                         key={item.id}
                         value={item.id}
-                        classes={{ selected: props.classes.selectedItem }}
+                        classes={{ 
+                            root: props.classes.selectedItemRoot,
+                            selected: props.classes.selectedItem 
+                        }}
                     >
                         {item.data.name}
                     </MenuItem>
@@ -182,29 +181,23 @@ const itemSelection = (selectedIndex: number, chartDataItems: IChartDataItem[], 
     )
 }
 
-const infoAreaComponent = (chartDataItems: IChartDataItem[], dispatch: Dispatch<any>, drawerActions: IDrawerActions, props: IInfoAreaCombinedProps) => {
-    const selectedIndex = chartDataItems.findIndex(item => item.isSelected);
-    let chartData: IChartDataItem | undefined = undefined;
-    if (selectedIndex !== -1) {
-        chartData = chartDataItems[selectedIndex];
-    } else if (selectedIndex === -1 && chartDataItems.length) {
-        dispatch(chartDataSelectedAsync(chartDataItems[0].id));
-        chartData = chartDataItems[0];
-    }
+const infoAreaComponent = (chartDataItems: IChartDataItem[], drawerActions: IDrawerActions, props: IInfoAreaCombinedProps) => {
+const dataIndex = chartDataItems.findIndex(item => item.id === drawerActions.itemSelected);
+const dataToShow = chartDataItems[dataIndex];
     return (
         <Grid>
-            {closedIconButton(selectedIndex === -1 ? 0 : selectedIndex, chartDataItems, drawerActions, props)}
-            {chartData && drawerActions.drawerOpen ?
+            {closedIconButton(chartDataItems, drawerActions, props)}
+            {dataToShow && drawerActions.drawerOpen ?
                 <Grid container
                     style={{ height: props.height - 100 }}
                     className={classNames(props.classes.infoArea)}>
-                    {infoHeadComponent(chartData.data, props)}
+                    {infoHeadComponent(dataToShow.data, props)}
                     <Divider variant="inset" className={props.classes.divider} />
                     <Grid id='info_scroll_area' item
                         style={{ height: props.height - 250 }}
                         className={props.classes.infoAreaBottom}
                     >
-                        {infoDataComponent(chartData.data, props)}
+                        {infoDataComponent(dataToShow.data, props)}
                     </Grid>
                 </Grid>
                 : undefined}
@@ -218,20 +211,25 @@ const InfoArea: React.FunctionComponent<IInfoAreaCombinedProps> = (props: IInfoA
     const [itemSelected, setItemSelected] = useState<string>('');
 
     const chartDataItems: IChartDataItem[] = useSelector((state: ReduxState) => state.chartDataItemsReducer.chartDataItems);
+    const infoAreaOpen: boolean = useSelector((state: ReduxState) => state.openInfoReducer.isInfoOpen);
+
     const dispatch = useDispatch();
 
     const handleDrawerOpen = () => {
         chartDataItems.length && setDrawerOpen(true);
+        dispatch(infoAreaOpenAsync(true));
     }
 
     const handleDrawerClosed = () => {
+        dispatch(chartDataInfoHiddenAsync());
+        dispatch(infoAreaOpenAsync(false));
         setDrawerOpen(false);
-        dispatch(chartDataInfoHiddenAsync())
     }
 
     const handleItemSelected = (event: any) => {
+        console.log(event.target.value)
         setItemSelected(event.target.value);
-        dispatch(chartDataSelectedAsync(event.target.value));
+        dispatch(chartDataInfoShown(event.target.value));
     }
 
     const drawerActions: IDrawerActions = {
@@ -243,13 +241,30 @@ const InfoArea: React.FunctionComponent<IInfoAreaCombinedProps> = (props: IInfoA
     }
 
     useEffect(() => {
-        const changedIndex = chartDataItems.findIndex(item => item.isInfoOpen);
-        if (changedIndex !== -1) {
-            !drawerOpen && setDrawerOpen(true);
-            setItemSelected(chartDataItems[changedIndex].data.name.toLowerCase());
+        if (infoAreaOpen !== drawerOpen) {
+            setDrawerOpen(infoAreaOpen);
         }
-    }, [chartDataItems])
+    }, [infoAreaOpen]);
 
+    useEffect(() => {
+        if (drawerOpen) {
+            const changedIndex = chartDataItems.findIndex(item => item.isInfoOpen);
+            if (changedIndex === -1) {
+                setItemSelected(chartDataItems[0].id);
+                dispatch(chartDataInfoShown(chartDataItems[0].id));
+            } else {
+                setItemSelected(chartDataItems[changedIndex].id);
+            }
+        }
+    }, [drawerOpen]);
+
+    useEffect(() => {
+        if (drawerOpen) {
+            const changedIndex = chartDataItems.findIndex(item => item.isInfoOpen);
+            const selectedChartItem = chartDataItems[changedIndex].id;
+            selectedChartItem !== itemSelected && setItemSelected(selectedChartItem);
+        }
+    }, [chartDataItems]);
 
     return (
         <Grid container className={classNames(
@@ -258,7 +273,7 @@ const InfoArea: React.FunctionComponent<IInfoAreaCombinedProps> = (props: IInfoA
                 ? props.classes.rootOpen
                 : props.classes.rootClosed
         )}>
-            {infoAreaComponent(chartDataItems, dispatch, drawerActions, props)}
+            {infoAreaComponent(chartDataItems, drawerActions, props)}
         </Grid>
     );
 }

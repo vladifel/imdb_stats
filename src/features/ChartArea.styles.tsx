@@ -12,7 +12,10 @@ export const styles = () =>
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            position: 'absolute',
+            top: '50%',
+            backgroundColor: 'transparent'
 
         },
         loadingIcon: {

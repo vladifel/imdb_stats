@@ -69,6 +69,14 @@ export default createMuiTheme({
                 width: '1rem'
             }
         },
+        MuiTooltip:{
+            tooltip: {
+                fontSize: '0.8rem',
+                color: '#252525',
+                backgroundColor: '#ffffff',
+                boxShadow: '0px 1px 4px 0 rgba(0, 0, 0, 0.5)'
+            }
+        },
         MuiTypography: {
             root: {
                 cursor: 'default'

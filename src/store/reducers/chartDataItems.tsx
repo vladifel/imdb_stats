@@ -35,14 +35,6 @@ export const chartDataItemsReducer = (state = initialState, action: ChartDataIte
                 chartDataItems: state.chartDataItems.filter(item => item.id !== action.id)
             }
         }
-        case ChartDataItemsActionTypes.CHART_DATA_SELECTED: {
-            const newChartDataItems = [...state.chartDataItems];
-            newChartDataItems.map(item => item.id === action.id ? item.isSelected = true : item.isSelected = false);
-            return {
-                ...state,
-                chartDataItems: newChartDataItems
-            }
-        }
         case ChartDataItemsActionTypes.CHART_DATA_INFO_SHOWN: {
             const newChartDataItems = [...state.chartDataItems];
             newChartDataItems.map(item => item.id === action.id ? item.isInfoOpen = true : item.isInfoOpen = false);

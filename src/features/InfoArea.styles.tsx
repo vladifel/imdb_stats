@@ -122,6 +122,10 @@ export const styles = (theme: Theme) =>
                 backgroundColor: 'rgba(243, 206, 19, 0.7)',
             },
         },
+        selectedItemRoot: {
+            padding: '0.2rem 0.5rem',
+            width: 'auto',
+        },
         topClosed: {
             width: 'inherit',
             minHeight: '6.25rem',
