@@ -20,7 +20,7 @@ import {
 } from 'recharts';
 import { dynamicSortMultiple } from '../helpers/Sorting';
 import { IChartData, IPersonData } from './LandingPage';
-import { chartDataAddedAsync, IChartDataItem } from '../store/actions/chartDataItems';
+import { chartDataAddedAsync, chartDataUpdatedAsync, IChartDataItem } from '../store/actions/chartDataItems';
 import { useDispatch, useSelector } from 'react-redux';
 import { getRandomRgbaColor } from '../helpers/ColorGenerator';
 import { ReduxState } from '../store';
@@ -273,6 +273,7 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
                         let dataToDispatch: IChartDataItem = {
                             id: dataToFetch.id,
                             color: getRandomRgbaColor(0.5),
+                            isLoading: true,
                             isShown: true,
                             isInfoOpen: false,
                             data: dataToFetch
@@ -282,7 +283,9 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
                         setIsLoading(false);
                         setDataToDisplay(data);
                         setNoData(false);
+                        dispatch(chartDataAddedAsync(dataToDispatch));
                         let films = [...dataToDispatch.data.filmsData];
+                        const scores: number[] = [];
                         for (let i = 0; i < films.length; i++) {
                             const film = await buildRatings(films[i]);
                             if (film && film.rating !== 0) {
@@ -290,9 +293,13 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
                                 dataToDispatch.data.films.push(film);
                                 dataToUpdate[dataToUpdate.length - 1] = dataToDispatch;
                                 setDataToDisplay(dataToUpdate);
+                                film.rating !== null && scores.push(film.rating);
                             }
                         }
-                        dispatch(chartDataAddedAsync(dataToDispatch));
+                        const avr = scores.reduce((a, b) => (a + b)) / scores.length;
+                        dataToDispatch.data.averageScore = avr || 0;
+                        dataToDispatch.isLoading = false;
+                        dispatch(chartDataUpdatedAsync(dataToDispatch.id, dataToDispatch));
 
                     } else {
                         setNoData(true);

@@ -7,6 +7,7 @@ import { IChartData } from '../../features/LandingPage';
 export interface IChartDataItem {
     id: string;
     color: string;
+    isLoading: boolean;
     isShown: boolean;
     isInfoOpen: boolean;
     data: IChartData;
@@ -21,6 +22,12 @@ export interface IChartDataShown {
 
 export interface IChartDataAdded {
     type: typeof ChartDataItemsActionTypes.CHART_DATA_ADDED
+    chartDataItem: IChartDataItem
+}
+
+export interface IChartDataUpdated {
+    type: typeof ChartDataItemsActionTypes.CHART_DATA_UPDATED
+    id: string,
     chartDataItem: IChartDataItem
 }
 
@@ -48,6 +55,7 @@ export interface IChartDataColorChanged {
 export type ChartDataItemsActions =
     IChartDataShown
     | IChartDataAdded
+    | IChartDataUpdated
     | IChartDataRemoved
     | IChartDataInfoShown
     | IChartDataInfoHidden
@@ -65,6 +73,14 @@ export const chartDataShown = (id: string, isShown: boolean): IChartDataShown =>
 export const chartDataAdded = (chartDataItem: IChartDataItem): IChartDataAdded => {
     return {
         type: ChartDataItemsActionTypes.CHART_DATA_ADDED,
+        chartDataItem
+    }
+}
+
+export const chartDataUpdated = (id: string, chartDataItem: IChartDataItem): IChartDataUpdated => {
+    return {
+        type: ChartDataItemsActionTypes.CHART_DATA_UPDATED,
+        id,
         chartDataItem
     }
 }
@@ -110,6 +126,15 @@ export const chartDataAddedAsync = (chartDataItem: IChartDataItem): ThunkAction<
     return async (dispatch: ThunkDispatch<{}, {}, AnyAction>): Promise<void> => {
         return new Promise<void>((resolve) => {
             dispatch(chartDataAdded(chartDataItem))
+            resolve()
+        })
+    }
+}
+
+export const chartDataUpdatedAsync = (id: string, chartDataItem: IChartDataItem): ThunkAction<Promise<void>, {}, {}, AnyAction> => {
+    return async (dispatch: ThunkDispatch<{}, {}, AnyAction>): Promise<void> => {
+        return new Promise<void>((resolve) => {
+            dispatch(chartDataUpdated(id, chartDataItem))
             resolve()
         })
     }

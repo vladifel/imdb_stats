@@ -1,4 +1,4 @@
-import React, { Dispatch } from 'react';
+import React, { Dispatch, Fragment } from 'react';
 import { WithStyles, withStyles } from '@material-ui/core/styles';
 import { styles } from './EntriesList.styles';
 import { useDispatch, useSelector } from 'react-redux'
@@ -14,17 +14,18 @@ import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import DeleteOutlineOutlinedIcon from '@material-ui/icons/DeleteOutlineOutlined';
 import Typography from '@material-ui/core/Typography';
 import Tooltip from '@material-ui/core/Tooltip';
-import { 
-    chartDataColorChangedAsync, 
-    chartDataInfoShown, 
-    chartDataRemovedAsync, 
-    chartDataShownAsync, 
-    IChartDataItem 
+import {
+    chartDataColorChangedAsync,
+    chartDataInfoShown,
+    chartDataRemovedAsync,
+    chartDataShownAsync,
+    IChartDataItem
 } from '../store/actions/chartDataItems';
 import { ReduxState } from '../store';
 import ColorSelector from '../helpers/ColorSelector';
 import { ColorResult } from 'react-color';
 import { infoAreaOpenAsync } from '../store/actions/openInfo';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 interface IEntriesListProps {
 
@@ -35,7 +36,7 @@ type IEntriesListCombinedProps = IEntriesListProps & WithStyles<typeof styles>;
 const checkboxComponent = (entry: IChartDataItem, dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
     return (
         <Tooltip
-        title='Hide from chart'
+            title='Hide from chart'
         >
             <ListItemIcon className={props.classes.iconsRightMargin}>
                 <Checkbox
@@ -74,7 +75,7 @@ const infoIconComponent = (entry: IChartDataItem, infoAreaOpen: boolean, dispatc
     return (
         <Tooltip
             title='Open artist info'
-            placement = 'top'
+            placement='top'
             enterDelay={500}
             enterNextDelay={500}
         >
@@ -113,41 +114,51 @@ const eraseIconComponent = (entry: IChartDataItem, dispatch: Dispatch<any>, prop
         </Tooltip>
     )
 }
-const entriesListComponent = (entries: IChartDataItem[], infoAreaOpen: boolean,dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
+const entriesListComponent = (entries: IChartDataItem[], infoAreaOpen: boolean, dispatch: Dispatch<any>, props: IEntriesListCombinedProps) => {
     return (
         <List>
-            {  entries && entries.map(entry => (
-                <ListItem
-                    key={entry.id}
-                    className={props.classes.itemContainer}
-                >
-                    {checkboxComponent(entry, dispatch, props)}
-                    {lensIconComponent(entry, dispatch, props)}
-                    <ListItemText
-                        primary={
-                            <Tooltip
-                                title={entry.data.name}
-                                enterDelay={500}
-                                enterNextDelay={500}
-                            >
-                                <Typography
-                                    className={props.classes.text}
+            {  entries && entries.map((entry, i) => {
+
+                return (
+                    <ListItem
+                        key={entry.id}
+                        className={props.classes.itemContainer}
+                    >
+                        {checkboxComponent(entry, dispatch, props)}
+                        {lensIconComponent(entry, dispatch, props)}
+                        <ListItemText
+                            primary={
+                                <Tooltip
+                                    title={entry.data.name}
+                                    enterDelay={500}
+                                    enterNextDelay={500}
                                 >
-                                    {entry.data.name}
-                                </Typography>
-                            </Tooltip>} />
-                    <ListItemSecondaryAction>
-                        <Grid container className={props.classes.rightContainer}>
-                            <Grid item>
-                                {infoIconComponent(entry, infoAreaOpen, dispatch, props)}
+                                    <Fragment>
+                                        {entry.isLoading ?
+                                            <LinearProgress
+                                                color={'secondary'}
+                                                style={{ width: '7rem' }}
+                                            /> : undefined}
+                                        <Typography
+                                            className={props.classes.text}
+                                        >
+                                            {entry.data.name}
+                                        </Typography>
+                                    </Fragment>
+                                </Tooltip>} />
+                        <ListItemSecondaryAction>
+                            <Grid container className={props.classes.rightContainer}>
+                                <Grid item>
+                                    {infoIconComponent(entry, infoAreaOpen, dispatch, props)}
+                                </Grid>
+                                <Grid item>
+                                    {eraseIconComponent(entry, dispatch, props)}
+                                </Grid>
                             </Grid>
-                            <Grid item>
-                                {eraseIconComponent(entry, dispatch, props)}
-                            </Grid>
-                        </Grid>
-                    </ListItemSecondaryAction>
-                </ListItem>
-            ))}
+                        </ListItemSecondaryAction>
+                    </ListItem>
+                )
+            })}
         </List>
     )
 }

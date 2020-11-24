@@ -121,7 +121,7 @@ const formLine = (searchText: string, module: any, virtualRow: any, setDropDownO
                 position: "absolute",
                 top: 0,
                 left: 0,
-                width: "100%",
+                width: "12.5rem",
                 height: `2.25rem`,
                 transform: `translateY(${virtualRow.start / 16}rem`,
             }}

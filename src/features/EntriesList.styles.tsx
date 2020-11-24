@@ -29,6 +29,9 @@ export const styles = () =>
             overflowX: 'hidden',
             backgroundColor: 'white'
         },
+        progress: {
+            width: '7rem',
+        },
         rightContainer: {
             display: 'flex',
             flexDirection: 'column',

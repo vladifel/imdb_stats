@@ -29,6 +29,15 @@ export const chartDataItemsReducer = (state = initialState, action: ChartDataIte
                 chartDataItems: [...state.chartDataItems, action.chartDataItem]
             }
         }
+        case ChartDataItemsActionTypes.CHART_DATA_UPDATED: {
+            const newChartDataItems = [...state.chartDataItems];
+            newChartDataItems.map(item => item.id === action.id && (item = action.chartDataItem));
+
+            return {
+                ...state,
+                chartDataItems: newChartDataItems
+            }
+        }
         case ChartDataItemsActionTypes.CHART_DATA_REMOVED: {
             return {
                 ...state,
