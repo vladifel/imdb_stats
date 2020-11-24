@@ -66,7 +66,6 @@ const buildRatings = async (film: any) => {
     const rawId = film.id.split('/');
     const id = rawId[2];
     const ratingData = await getRatingsData(id);
-    console.log(ratingData)
     if (ratingData.rating) {
         const filmData = {
             title: film.title,
@@ -307,6 +306,12 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
         }
         fetch();
     }, [props.selectedName]);
+
+    useEffect(() => {
+        if (chartDataItems.length !== dataToDisplay.length) {
+            setDataToDisplay(chartDataItems);
+        }
+    }, [chartDataItems])
 
     return (
         <Fragment>

@@ -236,7 +236,7 @@ const ListBox: React.FunctionComponent<IListBoxCombinedProps> = (props: IListBox
                                 root: props.classes.cssFocus,
                             }}
                         >
-                            Names
+                            Director's Name
                         </InputLabel>
                         <OutlinedInput
                             autoComplete='off'
