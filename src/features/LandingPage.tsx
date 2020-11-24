@@ -34,6 +34,7 @@ export interface IChartData {
     profession: string;
     averageScore: number;
     films: IFilmData[];
+    filmsData: any[];
 }
 
 interface ILandingPageProps {
@@ -52,7 +53,7 @@ const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: 
         setDataLoaded(mapFromArray(Object.values(directorsData)))
         // On first load
         setSelectedName(mapFromArray(Object.values(directorsData)).get('christopher nolan'));
-        },[]);
+    }, []);
 
     const handleAddAnother = () => {
         if (dataLoaded) {
