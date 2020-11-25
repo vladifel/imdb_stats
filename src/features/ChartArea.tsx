@@ -31,7 +31,7 @@ import './ChartArea.css';
 interface IChartAreaProps {
     height: number;
     width: number;
-    selectedName: IPersonData;
+    selectedName: IPersonData | undefined;
 }
 
 type IChartAreaCombinedProps = IChartAreaProps & WithStyles<typeof styles>;
@@ -83,7 +83,7 @@ const fetchData = async (props: IChartAreaCombinedProps) => {
     const options: any = {
         method: 'GET',
         url: 'https://imdb8.p.rapidapi.com/actors/get-all-filmography',
-        params: { nconst: props.selectedName.ImdbId },
+        params: { nconst: props.selectedName!.ImdbId },
         headers: {
             'x-rapidapi-key': 'b93408b0b0msh15310ee4e250e2bp15df7cjsnd43da7ee2788',
             'x-rapidapi-host': 'imdb8.p.rapidapi.com'
@@ -265,50 +265,52 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
 
     useEffect(() => {
         const fetch = async () => {
-            if (chartDataItems.findIndex(item => item.id === props.selectedName.ImdbId) === -1) {
-                setIsLoading(true);
-                const dataToFetch = await fetchData(props);
-                if (dataToFetch) {
-                    if (dataToFetch.films.length >= 0) {
-                        let dataToDispatch: IChartDataItem = {
-                            id: dataToFetch.id,
-                            color: getRandomRgbaColor(0.5),
-                            isLoading: true,
-                            isShown: true,
-                            isInfoOpen: false,
-                            data: dataToFetch
-                        };
-                        let data = dataToDisplay;
-                        data.push(dataToDispatch)
-                        setIsLoading(false);
-                        setDataToDisplay(data);
-                        setNoData(false);
-                        dispatch(chartDataAddedAsync(dataToDispatch));
-                        let films = [...dataToDispatch.data.filmsData];
-                        const scores: number[] = [];
-                        for (let i = 0; i < films.length; i++) {
-                            const film = await buildRatings(films[i]);
-                            if (film && film.rating !== 0) {
-                                const dataToUpdate = [...data];
-                                dataToDispatch.data.films.push(film);
-                                dataToUpdate[dataToUpdate.length - 1] = dataToDispatch;
-                                setDataToDisplay(dataToUpdate);
-                                film.rating !== null && scores.push(film.rating);
+            if (props.selectedName !== undefined) {
+                if (dataToDisplay.findIndex(item => item.id === props.selectedName!.ImdbId) === -1) {
+                    setIsLoading(true);
+                    const dataToFetch = await fetchData(props);
+                    if (dataToFetch) {
+                        if (dataToFetch.films.length >= 0) {
+                            let dataToDispatch: IChartDataItem = {
+                                id: dataToFetch.id,
+                                color: getRandomRgbaColor(0.5),
+                                isLoading: true,
+                                isShown: true,
+                                isInfoOpen: false,
+                                data: dataToFetch
+                            };
+                            let data = [...dataToDisplay];
+                            data.push(dataToDispatch)
+                            setIsLoading(false);
+                            setDataToDisplay(data);
+                            setNoData(false);
+                            dispatch(chartDataAddedAsync(dataToDispatch));
+                            let films = [...dataToDispatch.data.filmsData];
+                            const scores: number[] = [];
+                            for (let i = 0; i < films.length; i++) {
+                                const film = await buildRatings(films[i]);
+                                if (film && film.rating !== 0) {
+                                    const dataToUpdate = [...data];
+                                    dataToDispatch.data.films.push(film);
+                                    dataToUpdate[dataToUpdate.length - 1] = dataToDispatch;
+                                    setDataToDisplay(dataToUpdate);
+                                    film.rating !== null && scores.push(film.rating);
+                                }
                             }
-                        }
-                        const avr = scores.reduce((a, b) => (a + b)) / scores.length;
-                        dataToDispatch.data.averageScore = avr || 0;
-                        dataToDispatch.isLoading = false;
-                        dispatch(chartDataUpdatedAsync(dataToDispatch.id, dataToDispatch));
+                            const avr = scores.reduce((a, b) => (a + b)) / scores.length;
+                            dataToDispatch.data.averageScore = avr || 0;
+                            dataToDispatch.isLoading = false;
+                            dispatch(chartDataUpdatedAsync(dataToDispatch.id, dataToDispatch));
 
-                    } else {
-                        setNoData(true);
-                        setSnackbarOpen(true);
+                        } else {
+                            setNoData(true);
+                            setSnackbarOpen(true);
+                        }
                     }
+                } else {
+                    setSnackbarOpen(true);
+                    setSameSelected(true);
                 }
-            } else {
-                setSnackbarOpen(true);
-                setSameSelected(true);
             }
         }
         fetch();
@@ -324,7 +326,7 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
         <Fragment>
             <Grid container className={props.classes.chartArea}>
                 <Grid item>
-                    <EntriesList />
+                    <EntriesList height={props.height} />
                 </Grid>
                 <Grid item>
                     {chartComponent(dataToDisplay, props)}
@@ -340,7 +342,7 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = (props: ICha
             </Grid>
             <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
                 <Alert onClose={() => setSnackbarOpen(false)} severity="error">
-                    {sameSelected
+                    {sameSelected && props.selectedName
                         ? `Film data for ${props.selectedName.Name} already displayed, please select another name`
                         : 'Insufficient voters or rating data, please make another selection'}
                 </Alert>

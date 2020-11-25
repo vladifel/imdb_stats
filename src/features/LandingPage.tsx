@@ -64,6 +64,7 @@ const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: 
     }
 
     const handleSearch = (value: string) => {
+        setSelectedName(undefined);
         if (dataLoaded) {
             setNameToDisplay(value);
         }
@@ -95,12 +96,11 @@ const LandingPage: React.FunctionComponent<ILandingPageCombinedProps> = (props: 
                 </Grid>
             </Grid>
             <Grid item style={{ width: '100%', height: '100%' }}>
-                {selectedName
-                    ? <ChartArea
-                        height={height}
-                        width={width}
-                        selectedName={selectedName}
-                    /> : undefined}
+                <ChartArea
+                    height={height}
+                    width={width}
+                    selectedName={selectedName}
+                />
                 <Grid className={props.classes.rootRight}>
                     <InfoArea
                         height={height} />

@@ -24,7 +24,6 @@ const styles = () =>
         cssFocus: {
             '&.Mui-focused': {
                 color: "#f3ce13",
-                //fontWeight: 1000
             },
         },
         divider: {
@@ -251,7 +250,7 @@ const ListBox: React.FunctionComponent<IListBoxCombinedProps> = (props: IListBox
                                     </IconButton>
                                 </InputAdornment>
                             }
-                            labelWidth={45}
+                            labelWidth={105}
                         />
                     </FormControl>
                 </ClickAwayListener>

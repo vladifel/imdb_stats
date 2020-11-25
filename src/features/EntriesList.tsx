@@ -28,7 +28,7 @@ import { infoAreaOpenAsync } from '../store/actions/openInfo';
 import LinearProgress from '@material-ui/core/LinearProgress';
 
 interface IEntriesListProps {
-
+    height: number
 }
 
 type IEntriesListCombinedProps = IEntriesListProps & WithStyles<typeof styles>;
@@ -169,7 +169,9 @@ const EntriesList: React.FunctionComponent<IEntriesListCombinedProps> = (props: 
     const dispatch = useDispatch();
 
     return (
-        <Grid container className={props.classes.page}>
+        <Grid id='info_scroll_area'
+            style={{ height: props.height - 100 }}
+            container className={props.classes.page}>
             {entriesListComponent(chartDataItems, infoAreaOpen, dispatch, props)}
         </Grid>
     );

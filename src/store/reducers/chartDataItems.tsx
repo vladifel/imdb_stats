@@ -39,9 +39,10 @@ export const chartDataItemsReducer = (state = initialState, action: ChartDataIte
             }
         }
         case ChartDataItemsActionTypes.CHART_DATA_REMOVED: {
+            const newChartDataItems = state.chartDataItems.filter(item => item.id !== action.id)
             return {
                 ...state,
-                chartDataItems: state.chartDataItems.filter(item => item.id !== action.id)
+                chartDataItems: newChartDataItems
             }
         }
         case ChartDataItemsActionTypes.CHART_DATA_INFO_SHOWN: {
