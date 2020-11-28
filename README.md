@@ -1,6 +1,9 @@
-# Getting Started with Create React App
+# [Film Directors' ratings](https://imdb-directors-stats.web.app/)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### Wanna know who's the best film director of all time?
+
+A beautiful web site aiming to help users compare directors based on the ratings of their films.
+React - Redux web App, styled using the Material-UI design system & guidelines and using Material-UI components. Based on Imdb's unofficial Api & Hosted on FireBase.
 
 ## Available Scripts
 

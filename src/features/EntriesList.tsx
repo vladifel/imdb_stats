@@ -55,19 +55,13 @@ const lensIconComponent = (entry: IChartDataItem, dispatch: Dispatch<any>, props
         id && dispatch(chartDataColorChangedAsync(id, color.hex))
     }
     return (
-        <Tooltip
-            title='Change color'
-            enterDelay={500}
-            enterNextDelay={500}
-        >
-            <ListItemIcon className={props.classes.colorIcon}>
-                <ColorSelector
-                    color={entry.color}
-                    name={entry.id}
-                    colorChange={handleColorChange}
-                />
-            </ListItemIcon>
-        </Tooltip>
+        <ListItemIcon className={props.classes.colorIcon}>
+            <ColorSelector
+                color={entry.color}
+                name={entry.id}
+                colorChange={handleColorChange}
+            />
+        </ListItemIcon>
     )
 }
 
