@@ -117,7 +117,7 @@ const ChartArea: React.FunctionComponent<IChartAreaCombinedProps> = ({
 
   useEffect(() => {
     //only on startup
-    fetchFilms({ ImdbId: "nm0004810", Name: "Chris Carter" });
+    fetchFilms({ ImdbId: "nm0634240", Name: "Christopher Nolan" });
   }, []);
 
   return (
