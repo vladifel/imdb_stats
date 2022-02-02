@@ -57,7 +57,7 @@ export const buildRatings = async (film: any) => {
   };
   return filmData;
 };
-export const fetchData = async (selectedName: IPersonData | undefined) => {
+export const fetchData = (selectedName: IPersonData | undefined) => {
   const options: any = {
     method: "GET",
     url: "https://imdb8.p.rapidapi.com/actors/get-all-filmography",
@@ -67,17 +67,13 @@ export const fetchData = async (selectedName: IPersonData | undefined) => {
       "x-rapidapi-host": "imdb8.p.rapidapi.com",
     },
   };
-  return await axios
+  return axios
     .request(options)
-    .then(async response => {
-      return await buildData(response.data, selectedName);
-    })
-    .catch(function (error) {
-      console.error(error);
-    });
+    .then(response => buildData(response.data, selectedName))
+    .catch(error => console.error(error));
 };
 
-export const fetchRatings = async (movieId: string) => {
+export const fetchRatings = (movieId: string) => {
   const options: any = {
     method: "GET",
     url: `https://imdb-internet-movie-database-unofficial.p.rapidapi.com/film/${movieId}`,
@@ -90,13 +86,13 @@ export const fetchRatings = async (movieId: string) => {
   //     method: 'GET',
   //     url: `http://www.omdbapi.com/?i=${movieId}&apikey=262c131`,
   // };
-  return await axios
+  return axios
     .request(options)
     .then(response => response.data)
     .catch(error => console.error(error));
 };
 
-const getRatingsData = async (movieId: string) => await fetchRatings(movieId).then(res => res);
+const getRatingsData = (movieId: string) => fetchRatings(movieId).then(res => res);
 
 export const buildDefaultData = (dataToFetch: IChartData): IChartDataItem => ({
   id: dataToFetch.id,
@@ -106,3 +102,6 @@ export const buildDefaultData = (dataToFetch: IChartData): IChartDataItem => ({
   isInfoOpen: false,
   data: dataToFetch,
 });
+
+export const getDuplicateNameError = (name: string) =>
+  `Film data for ${name} already displayed, please select another name`;

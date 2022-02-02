@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState } from "react";
+import React, { FC, useCallback, useMemo, useState } from "react";
 import { WithStyles, withStyles } from "@material-ui/core/styles";
 import { Grid, IconButton, Tooltip } from "@material-ui/core";
 import GroupAddIcon from "@material-ui/icons/GroupAdd";
@@ -22,21 +22,20 @@ const LandingPage: FC<ILandingPageCombinedProps> = ({ classes }: ILandingPageCom
 
   const data = useMemo(() => mapFromArray(Object.values(directorsData)), []);
 
-  useEffect(() => {
-    setSelectedName(data.get("alfonso arau"));
-  }, []);
-
-  const handleAddAnother = () => {
+  const handleAddAnother = useCallback(() => {
     if (data && nameToDisplay) {
       setSelectedName(data.get(nameToDisplay.toLowerCase()));
       setNameToDisplay(undefined);
     }
-  };
+  }, [data, nameToDisplay]);
 
-  const handleSearch = (value: string) => {
-    setSelectedName(undefined);
-    data && setNameToDisplay(value);
-  };
+  const handleSearch = useCallback(
+    (value: string) => {
+      setSelectedName(undefined);
+      data && setNameToDisplay(value);
+    },
+    [data]
+  );
 
   return (
     <Grid container className={classes.page}>
