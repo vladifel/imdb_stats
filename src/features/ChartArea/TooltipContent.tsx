@@ -1,8 +1,6 @@
 import React, { FC } from "react";
 import { Grid, Typography } from "@material-ui/core";
 
-import { getVotesString } from "../../helpers/getVotesString";
-
 interface ITooltipContentProps {
   title: string;
   year: number;
@@ -16,7 +14,6 @@ const TooltipContent: FC<ITooltipContentProps> = ({
   rating,
   imdbVotes,
 }: ITooltipContentProps) => {
-  const votesString = imdbVotes ? getVotesString(imdbVotes) : "";
   return (
     <Grid
       style={{
@@ -52,7 +49,7 @@ const TooltipContent: FC<ITooltipContentProps> = ({
           color: imdbVotes > 1000 ? "black" : "red",
         }}
       >
-        {`Voters: ${votesString}`}
+        {`Voters: ${imdbVotes.toLocaleString()}`}
       </Typography>
     </Grid>
   );

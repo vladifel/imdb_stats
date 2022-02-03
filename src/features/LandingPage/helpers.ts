@@ -1,4 +1,4 @@
-import { IPersonData } from "../features/types";
+import { IPersonData } from "../types";
 
 export const mapFromArray = (list: IPersonData[]) => {
   var map = new Map<string, IPersonData>();

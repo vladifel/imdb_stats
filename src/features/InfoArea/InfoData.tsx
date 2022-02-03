@@ -3,7 +3,6 @@ import classNames from "classnames";
 import { WithStyles, withStyles } from "@material-ui/core/styles";
 import { Link, List, ListItem, ListItemText } from "@material-ui/core";
 
-import { getVotesString } from "../../helpers/getVotesString";
 import { IChartData } from "../types";
 import { styles } from "./InfoArea.styles";
 
@@ -17,25 +16,22 @@ const InfoData: FC<IInfoDataCombinedProps> = ({ chartData, classes }: IInfoDataC
   const { films } = chartData;
   return (
     <List>
-      {films.map(({ id, year, title, rating, imdbVotes }) => {
-        const votesString = imdbVotes ? getVotesString(imdbVotes) : "";
-        return (
-          <ListItem key={id}>
-            <ListItemText
-              primary={
-                <Link
-                  className={classNames(classes.linkColor, classes.listText)}
-                  href={`https://www.imdb.com/title/${id}/`}
-                  target="_blank"
-                >
-                  {`${year}: ${title}`}
-                </Link>
-              }
-              secondary={`Rating: ${rating} (${votesString} votes)`}
-            />
-          </ListItem>
-        );
-      })}
+      {films.map(({ id, year, title, rating, imdbVotes }) => (
+        <ListItem key={id}>
+          <ListItemText
+            primary={
+              <Link
+                className={classNames(classes.linkColor, classes.listText)}
+                href={`https://www.imdb.com/title/${id}/`}
+                target="_blank"
+              >
+                {`${year}: ${title}`}
+              </Link>
+            }
+            secondary={`Rating: ${rating} (${imdbVotes?.toLocaleString()} votes)`}
+          />
+        </ListItem>
+      ))}
     </List>
   );
 };

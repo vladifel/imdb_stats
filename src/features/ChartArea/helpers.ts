@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { IChartDataItem } from "../../store/actions/chartDataItems";
-import { getRandomRgbaColor } from "../../helpers/ColorGenerator";
+import { getRandomRgbaColor } from "../../utils/ColorGenerator/ColorGenerator";
 import { IChartData, IFilmData, IPersonData } from "../types";
 
 export const buildData = async (

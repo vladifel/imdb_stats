@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import { WithStyles, withStyles } from "@material-ui/core/styles";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Grid,
   LinearProgress,
@@ -10,11 +11,19 @@ import {
   Tooltip,
 } from "@material-ui/core";
 
+import { ReduxState } from "../../store";
+import {
+  chartDataColorChanged,
+  chartDataInfoShown,
+  chartDataRemoved,
+  chartDataShown,
+} from "../../store/actions/chartDataItems";
+import { infoAreaOpen } from "../../store/actions/openInfo";
 import { IChartData } from "../types";
-import CheckboxComponent from "./CheckboxComponent";
-import LensIconComponent from "./LensIconComponent";
-import InfoIconComponent from "./InfoIconComponent";
-import EraseIconComponent from "./EraseIconComponent";
+import CheckboxComponent from "../Shared/CheckboxComponent";
+import LensIconComponent from "../Shared/LensIconComponent";
+import InfoIconComponent from "../Shared/InfoIconComponent";
+import EraseIconComponent from "../Shared/EraseIconComponent";
 import { styles } from "./EntriesList.styles";
 
 interface IEntryProps {
@@ -36,10 +45,34 @@ const Entry: React.FunctionComponent<IEntryCombinedProps> = ({
   isShown,
   classes,
 }: IEntryCombinedProps) => {
+  const dispatch = useDispatch();
+
+  const isInfoAreaOpen = useSelector((state: ReduxState) => state.openInfoReducer.isInfoOpen);
+  const handleCheckboxCheck = () => {
+    dispatch(chartDataShown(id, !isShown));
+  };
+
+  const handleInfoClick = () => {
+    dispatch(chartDataInfoShown(id));
+    !isInfoAreaOpen && dispatch(infoAreaOpen(true));
+  };
+
+  const handleColorChange = (color: string) => {
+    id && dispatch(chartDataColorChanged(id, color));
+  };
+
+  const handleEraseClick = () => {
+    dispatch(chartDataRemoved(id));
+  };
+
   return (
     <ListItem key={id} className={classes.itemContainer}>
-      <CheckboxComponent id={id} isShown={isShown} />
-      <LensIconComponent id={id} color={color} />
+      <CheckboxComponent
+        title="Hide from chart"
+        isChecked={isShown}
+        onChange={handleCheckboxCheck}
+      />
+      <LensIconComponent name={id} color={color} onColorChange={handleColorChange} />
       <ListItemText
         primary={
           <Tooltip title={data.name} enterDelay={500} enterNextDelay={500}>
@@ -55,10 +88,10 @@ const Entry: React.FunctionComponent<IEntryCombinedProps> = ({
       <ListItemSecondaryAction>
         <Grid container className={classes.rightContainer}>
           <Grid item>
-            <InfoIconComponent id={id} />
+            <InfoIconComponent title="Open artist info" onClick={handleInfoClick} />
           </Grid>
           <Grid item>
-            <EraseIconComponent id={id} />
+            <EraseIconComponent title="Remove from chart" onClick={handleEraseClick} />
           </Grid>
         </Grid>
       </ListItemSecondaryAction>

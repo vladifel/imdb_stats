@@ -3,7 +3,7 @@ import classNames from "classnames";
 import { createStyles, WithStyles, withStyles } from "@material-ui/core/styles";
 import { Grid, ListItem, ListItemText, Tooltip, Typography } from "@material-ui/core";
 
-import HighlightSearchText from "./HighlightSearchText";
+import HighlightSearchText from "../HighlightSearchText/HighlightSearchText";
 
 const styles = () =>
   createStyles({

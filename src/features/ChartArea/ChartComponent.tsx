@@ -13,7 +13,7 @@ import {
 } from "recharts";
 
 import { IChartDataItem } from "../../store/actions/chartDataItems";
-import { dynamicSortMultiple } from "../../helpers/Sorting";
+import { dynamicSortMultiple } from "../../utils/Sorting/Sorting";
 import TooltipContent from "./TooltipContent";
 import { useSelector } from "react-redux";
 import { ReduxState } from "../../store";
