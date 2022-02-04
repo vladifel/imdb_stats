@@ -11,19 +11,20 @@ import {
   Tooltip,
 } from "@material-ui/core";
 
-import { ReduxState } from "../../store";
+import { ReduxState } from "store";
+import { infoAreaOpen } from "store/actions/openInfo";
 import {
   chartDataColorChanged,
   chartDataInfoShown,
   chartDataRemoved,
   chartDataShown,
-} from "../../store/actions/chartDataItems";
-import { infoAreaOpen } from "../../store/actions/openInfo";
+} from "store/actions/chartDataItems";
+import CheckboxComponent from "features/Shared/CheckboxComponent";
+import LensIconComponent from "features/Shared/LensIconComponent";
+import InfoIconComponent from "features/Shared/InfoIconComponent";
+import EraseIconComponent from "features/Shared/EraseIconComponent";
+
 import { IChartData } from "../types";
-import CheckboxComponent from "../Shared/CheckboxComponent";
-import LensIconComponent from "../Shared/LensIconComponent";
-import InfoIconComponent from "../Shared/InfoIconComponent";
-import EraseIconComponent from "../Shared/EraseIconComponent";
 import { styles } from "./EntriesList.styles";
 
 interface IEntryProps {

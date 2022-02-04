@@ -4,9 +4,10 @@ import { WithStyles, withStyles } from "@material-ui/core/styles";
 import { Divider, Grid } from "@material-ui/core";
 import InfoIcon from "@material-ui/icons/Info";
 
-import { IChartDataItem } from "../../store/actions/chartDataItems";
+import { IChartDataItem } from "store/actions/chartDataItems";
+import CloseIconButton from "features/Shared/CloseIconButton";
+
 import { IDrawerActions } from "./InfoAreaContainer";
-import CloseIconButton from "../Shared/CloseIconButton";
 import InfoData from "./InfoData";
 import InfoHead from "./InfoHead";
 import ItemSelection from "./ItemSelection";

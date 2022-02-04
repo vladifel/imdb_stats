@@ -6,12 +6,8 @@ import { Grid, Snackbar, Typography } from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
 import { SiImdb } from "react-icons/si";
 
-import {
-  chartDataAdded,
-  chartDataUpdated,
-  IChartDataItem,
-} from "../../store/actions/chartDataItems";
-import { ReduxState } from "../../store";
+import { ReduxState } from "store";
+import { chartDataAdded, chartDataUpdated, IChartDataItem } from "store/actions/chartDataItems";
 import { IPersonData } from "../types";
 import EntriesList from "../EntriesList/EntriesList";
 import { buildDefaultData, buildRatings, fetchData, getDuplicateNameError } from "./helpers";

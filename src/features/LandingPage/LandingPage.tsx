@@ -3,11 +3,12 @@ import { WithStyles, withStyles } from "@material-ui/core/styles";
 import { Grid, IconButton, Tooltip } from "@material-ui/core";
 import GroupAddIcon from "@material-ui/icons/GroupAdd";
 
-import directorsData from "../../assets/directors1000.json";
-import { useWindowSize } from "../../utils/hooks/useWindowSize";
-import ListBox from "../../utils/ListBox/ListBox";
-import ChartArea from "../ChartArea/ChartArea";
-import InfoAreaContainer from "../InfoArea/InfoAreaContainer";
+import directorsData from "assets/directors1000.json";
+import { useWindowSize } from "utils/hooks/useWindowSize";
+import ListBox from "utils/ListBox/ListBox";
+import ChartArea from "features/ChartArea/ChartArea";
+import InfoAreaContainer from "features/InfoArea/InfoAreaContainer";
+
 import { IPersonData } from "../types";
 import { mapFromArray } from "./helpers";
 import { styles } from "./LandingPage.styles";

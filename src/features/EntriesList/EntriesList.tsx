@@ -3,8 +3,9 @@ import { WithStyles, withStyles } from "@material-ui/core/styles";
 import { useSelector } from "react-redux";
 import { Grid, List } from "@material-ui/core";
 
-import { ReduxState } from "../../store";
-import { IChartDataItem } from "../../store/actions/chartDataItems";
+import { ReduxState } from "store";
+import { IChartDataItem } from "store/actions/chartDataItems";
+
 import Entry from "./Entry";
 import { styles } from "./EntriesList.styles";
 

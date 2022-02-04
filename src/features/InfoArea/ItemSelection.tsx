@@ -2,7 +2,8 @@ import React, { FC } from "react";
 import { WithStyles, withStyles } from "@material-ui/core/styles";
 import { FormControl, InputLabel, MenuItem, Select } from "@material-ui/core";
 
-import { IChartDataItem } from "../../store/actions/chartDataItems";
+import { IChartDataItem } from "store/actions/chartDataItems";
+
 import { styles } from "./InfoArea.styles";
 
 interface IItemSelectionProps {

@@ -1,4 +1,5 @@
 import React, { FC, Fragment } from "react";
+import { useSelector } from "react-redux";
 import {
   Scatter,
   LabelList,
@@ -12,11 +13,11 @@ import {
   ZAxis,
 } from "recharts";
 
-import { IChartDataItem } from "../../store/actions/chartDataItems";
-import { dynamicSortMultiple } from "../../utils/Sorting/Sorting";
+import { ReduxState } from "store";
+import { IChartDataItem } from "store/actions/chartDataItems";
+import { dynamicSortMultiple } from "utils/Sorting/Sorting";
+
 import TooltipContent from "./TooltipContent";
-import { useSelector } from "react-redux";
-import { ReduxState } from "../../store";
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (!active || !payload) {

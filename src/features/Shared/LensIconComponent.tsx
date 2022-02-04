@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import { ColorResult } from "react-color";
 import { ListItemIcon } from "@material-ui/core";
 
-import ColorSelector from "../../utils/ColorSelector/ColorSelector";
+import ColorSelector from "utils/ColorSelector/ColorSelector";
 
 interface ILensIconComponentProps {
   name: string;

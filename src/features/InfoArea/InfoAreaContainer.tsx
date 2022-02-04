@@ -4,13 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { WithStyles, withStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
 
-import { ReduxState } from "../../store";
+import { ReduxState } from "store";
+import { infoAreaOpen } from "store/actions/openInfo";
 import {
   chartDataInfoHidden,
   chartDataInfoShown,
   IChartDataItem,
-} from "../../store/actions/chartDataItems";
-import { infoAreaOpen } from "../../store/actions/openInfo";
+} from "store/actions/chartDataItems";
+
 import InfoArea from "./InfoArea";
 import { styles } from "./InfoArea.styles";
 
